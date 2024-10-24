@@ -6,3 +6,8 @@ I have a good knowledge of HTML5 and CSS3, with basic skills in JavaScript, acqu
 - **JavaScript**: Basic JavaScript will be used for handling interactivity and user input on the site.
 - **D3.js**: I plan to use D3.js to create interactive data visualizations, which will allow for the manipulation and display of the global environmental data.
 - **Bootstrap**: If necessary, I may use Bootstrap to ensure the site is responsive and looks good on different devices.
+## Data Handling and Processing Strategies
+- **Data Sources**: I will use public data sources such as the World Bank Data Portal, Our World in Data, and NASA Climate Data.
+- **Data Formats**: The data will likely be in formats such as CSV or JSON.
+- **Data Processing**: JavaScript (or D3.js) will be used to parse and process the data for visualization.
+- **Visualization Libraries**: D3.js will be used to create interactive and dynamic visualizations, which allow users to explore and understand global environmental trends.
