@@ -4,19 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Environmental Data Visualizations</title>
+    <!-- Add D3.js for chart creation -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
+    <!-- Homepage title and subtitle -->
     <h1>Global Environmental Data Visualizations</h1>
     <h2>Assignment 1 - Dario Onsori</h2>
 
+    <!-- Project information section -->
     <section>
         <h3>About the Project</h3>
         <p>This project presents interactive visualizations of global CO2 emissions data. The visualizations aim to provide insights into the per capita emissions, regional comparisons, and types of CO2 sources.</p>
     </section>
 
+    <!-- "Comparing Categories" section with the bar chart -->
     <section id="comparing-categories">
         <h3>Comparing Categories</h3>
-        <p>This section will compare CO2 emissions per capita, presenting different data visualizations for clearer insights.</p>
+        <p>This section compares CO2 emissions per capita, presenting different data visualizations for clearer insights.</p>
+        
+        <!-- Container for the bar chart -->
+        <div id="bar-chart"></div>
     </section>
+
+    <!-- Script for the bar chart -->
+    <script>
+        // Sample data for the bar chart
+        const data = [
+            { country: "USA", emissions: 15.5 },
+            { country: "China", emissions: 10.3 },
+            { country: "India", emissions: 7.2 },
+            { country: "Russia", emissions: 11.4 },
+            { country: "Japan", emissions: 9.0 }
+        ];
+
+        // Chart settings
+        const width = 500;
+        const height = 300;
+        const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+
+        // Create the SVG element
+        const svg = d3.select("#bar-chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        // X-axis scale (country names)
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.country))
+            .range([0, width - margin.left - margin.right])
+            .padding(0.1);
+
+        // Y-axis scale (emissions)
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.emissions)])
+            .range([height - margin.top - margin.bottom, 0]);
+
+        // Add the bars
+        svg.selectAll(".bar")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.country))
+            .attr("y", d => y(d.emissions))
+            .attr("width", x.bandwidth())
+            .attr("height", d => height - margin.top - margin.bottom - y(d.emissions))
+            .attr("fill", "steelblue");
+
+        // Add the X axis
+        svg.append("g")
+            .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
+            .call(d3.axisBottom(x));
+
+        // Add the Y axis
+        svg.append("g")
+            .call(d3.axisLeft(y));
+    </script>
 </body>
 </html>
