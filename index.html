@@ -53,20 +53,20 @@
 
     <!-- Script for the bar chart with selector and sorting functionality -->
     <script>
-        // Data for 2018
+        // Data for 2018 in alphabetical order
         const data2018 = [
+            { country: "China", emissions: 7.3 },
             { country: "Germany", emissions: 9.1 },
             { country: "Italy", emissions: 5.8 },
-            { country: "China", emissions: 7.3 },
             { country: "Russia", emissions: 11.8 },
             { country: "USA", emissions: 16.2 }
         ];
 
-        // Data for decade average (2010-2020)
+        // Data for decade average (2010-2020) in alphabetical order
         const dataDecade = [
+            { country: "China", emissions: 7.15 },
             { country: "Germany", emissions: 9.49 },
             { country: "Italy", emissions: 6.14 },
-            { country: "China", emissions: 7.15 },
             { country: "Russia", emissions: 11.50 },
             { country: "USA", emissions: 16.50 }
         ];
@@ -76,12 +76,6 @@
 
         // Tooltip setup
         const tooltip = d3.select("#tooltip");
-
-        // Function to reset data to the default order
-        function resetOrder(data) {
-            const order = ["Germany", "Italy", "China", "Russia", "USA"];
-            return data.sort((a, b) => order.indexOf(a.country) - order.indexOf(b.country));
-        }
 
         function createBarChart(data) {
             // Clear any existing SVG
@@ -149,19 +143,17 @@
 
             if (sortByEmissions) {
                 selectedData.sort((a, b) => b.emissions - a.emissions);
-            } else {
-                selectedData = resetOrder(selectedData); // Reset to default order
             }
             createBarChart(selectedData);
         }
 
         // Initialize chart with default year selection
-        createBarChart(resetOrder([...data2018]));
+        createBarChart(data2018);
 
         // Update chart on selector change
         d3.select("#time-period").on("change", function() {
             const selectedTime = this.value;
-            const selectedData = selectedTime === "2018" ? resetOrder([...data2018]) : resetOrder([...dataDecade]);
+            const selectedData = selectedTime === "2018" ? data2018 : dataDecade;
             createBarChart(selectedData);
         });
     </script>
