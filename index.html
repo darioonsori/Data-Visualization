@@ -15,6 +15,13 @@
             padding: 5px;
             visibility: hidden;
         }
+        .bar {
+            fill-opacity: 0.7;
+        }
+        .axis-label {
+            font-size: 14px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -25,12 +32,12 @@
     <!-- Project information section -->
     <section>
         <h3>About the Project</h3>
-        <p>This project presents interactive visualizations of global CO2 emissions data. The visualizations aim to provide insights into the per capita emissions, regional comparisons, and types of CO2 sources.</p>
+        <p>This project presents interactive visualizations of global CO₂ emissions data. The visualizations aim to provide insights into the per capita emissions, regional comparisons, and types of CO₂ sources.</p>
     </section>
 
     <!-- Section for displaying annual or decade average emissions with selectors -->
     <section id="comparing-categories">
-        <h3>Per Capita CO2 Emissions Comparison</h3>
+        <h3>Per Capita CO₂ Emissions Comparison</h3>
 
         <!-- Selector for choosing between year and decade -->
         <label for="time-period">Select Time Period:</label>
@@ -48,77 +55,156 @@
         </div>
     </section>
 
+    <!-- New Section for Country Comparison -->
+    <section id="country-comparison">
+        <h3>Country Comparison: CO₂ Emissions by Region</h3>
+        <div id="stacked-bar-chart"></div>
+    </section>
+
     <!-- Tooltip for mouseover display -->
     <div class="tooltip" id="tooltip"></div>
 
-    <!-- Script for the bar chart with selector and sorting functionality -->
     <script>
-        // Data for 2018 in alphabetical order
-        const data2018 = [
-            { country: "China", emissions: 7.3 },
-            { country: "Germany", emissions: 9.1 },
-            { country: "Italy", emissions: 5.8 },
-            { country: "Russia", emissions: 11.8 },
-            { country: "USA", emissions: 16.2 }
+        // Data for the Country Comparison chart
+        const regionData = [
+            {
+                region: "Africa",
+                countries: {
+                    "South Africa": 7.59,
+                    "Nigeria": 0.53,
+                    "Egypt": 2.35,
+                    "Algeria": 4.08,
+                    "Morocco": 1.73,
+                    "Others": 10.34
+                }
+            },
+            {
+                region: "Asia",
+                countries: {
+                    "China": 7.30,
+                    "India": 1.89,
+                    "Japan": 9.04,
+                    "South Korea": 12.97,
+                    "Indonesia": 2.22,
+                    "Others": 15.13
+                }
+            },
+            {
+                region: "Europe",
+                countries: {
+                    "Germany": 9.10,
+                    "France": 5.01,
+                    "United Kingdom": 5.71,
+                    "Italy": 5.84,
+                    "Spain": 5.74,
+                    "Others": 8.57
+                }
+            },
+            {
+                region: "North America",
+                countries: {
+                    "United States": 16.19,
+                    "Canada": 15.58,
+                    "Mexico": 3.79,
+                    "Others": 5.92
+                }
+            },
+            {
+                region: "South America",
+                countries: {
+                    "Brazil": 2.27,
+                    "Argentina": 4.07,
+                    "Colombia": 1.77,
+                    "Chile": 4.51,
+                    "Peru": 1.73,
+                    "Others": 3.42
+                }
+            },
+            {
+                region: "Oceania",
+                countries: {
+                    "Australia": 16.62,
+                    "New Zealand": 7.38,
+                    "Papua New Guinea": 0.81,
+                    "Others": 2.43
+                }
+            }
         ];
-
-        // Data for decade average (2010-2020) in alphabetical order
-        const dataDecade = [
-            { country: "China", emissions: 7.15 },
-            { country: "Germany", emissions: 9.49 },
-            { country: "Italy", emissions: 6.14 },
-            { country: "Russia", emissions: 11.50 },
-            { country: "USA", emissions: 16.50 }
-        ];
-
-        // State variable for sorting
-        let sortByEmissions = false;
 
         // Tooltip setup
         const tooltip = d3.select("#tooltip");
 
-        function createBarChart(data) {
+        function createStackedBarChart(data) {
             // Clear any existing SVG
-            d3.select("#bar-chart").selectAll("*").remove();
+            d3.select("#stacked-bar-chart").selectAll("*").remove();
 
             // Chart settings
-            const width = 500;
-            const height = 300;
-            const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+            const width = 800;
+            const height = 400;
+            const margin = { top: 20, right: 30, bottom: 100, left: 50 };
 
             // Create SVG
-            const svg = d3.select("#bar-chart")
+            const svg = d3.select("#stacked-bar-chart")
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height)
                 .append("g")
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-            // X-axis scale
-            const x = d3.scaleBand()
-                .domain(data.map(d => d.country))
-                .range([0, width - margin.left - margin.right])
-                .padding(0.1);
+            // Process data for stacking
+            const regions = data.map(d => d.region);
+            const categories = Object.keys(data[0].countries);
 
-            // Y-axis scale
+            // Color scale
+            const color = d3.scaleOrdinal()
+                .domain(categories)
+                .range(d3.schemeCategory10);
+
+            // Stack data
+            const stackedSeries = d3.stack()
+                .keys(categories)
+                .value((d, key) => d.countries[key])
+                (data);
+
+            // X and Y scales
+            const x = d3.scaleBand()
+                .domain(regions)
+                .range([0, width - margin.left - margin.right])
+                .padding(0.2);
+
             const y = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.emissions)])
+                .domain([0, d3.max(stackedSeries, d => d3.max(d, d => d[1]))])
+                .nice()
                 .range([height - margin.top - margin.bottom, 0]);
 
-            // Bars with tooltip
-            svg.selectAll(".bar")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", d => x(d.country))
-                .attr("y", d => y(d.emissions))
+            // X Axis
+            svg.append("g")
+                .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
+
+            // Y Axis
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(10));
+
+            // Create stacked bars
+            svg.selectAll("g.layer")
+                .data(stackedSeries)
+                .enter().append("g")
+                .attr("class", "layer")
+                .attr("fill", d => color(d.key))
+                .selectAll("rect")
+                .data(d => d)
+                .enter().append("rect")
+                .attr("x", d => x(d.data.region))
+                .attr("y", d => y(d[1]))
+                .attr("height", d => y(d[0]) - y(d[1]))
                 .attr("width", x.bandwidth())
-                .attr("height", d => height - margin.top - margin.bottom - y(d.emissions))
-                .attr("fill", "steelblue")
                 .on("mouseover", function(event, d) {
                     tooltip.style("visibility", "visible")
-                           .text(`Emissions: ${d.emissions}t`);
+                           .html(`Region: ${d.data.region}<br>Emissions: ${(d[1] - d[0]).toFixed(2)}t`);
                 })
                 .on("mousemove", function(event) {
                     tooltip.style("top", `${event.pageY - 10}px`)
@@ -127,35 +213,10 @@
                 .on("mouseout", function() {
                     tooltip.style("visibility", "hidden");
                 });
-
-            // X and Y axes
-            svg.append("g")
-                .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
-                .call(d3.axisBottom(x));
-            svg.append("g")
-                .call(d3.axisLeft(y));
         }
 
-        // Sorting function
-        function sortBars() {
-            sortByEmissions = !sortByEmissions;
-            let selectedData = document.getElementById("time-period").value === "2018" ? [...data2018] : [...dataDecade];
-
-            if (sortByEmissions) {
-                selectedData.sort((a, b) => b.emissions - a.emissions);
-            }
-            createBarChart(selectedData);
-        }
-
-        // Initialize chart with default year selection
-        createBarChart(data2018);
-
-        // Update chart on selector change
-        d3.select("#time-period").on("change", function() {
-            const selectedTime = this.value;
-            const selectedData = selectedTime === "2018" ? data2018 : dataDecade;
-            createBarChart(selectedData);
-        });
+        // Create the initial stacked bar chart
+        createStackedBarChart(regionData);
     </script>
 </body>
 </html>
