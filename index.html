@@ -18,24 +18,33 @@
         <p>This project presents interactive visualizations of global CO2 emissions data. The visualizations aim to provide insights into the per capita emissions, regional comparisons, and types of CO2 sources.</p>
     </section>
 
-    <!-- "Comparing Categories" section with the bar chart -->
+    <!-- Section for annual emissions (2018) -->
     <section id="comparing-categories">
-        <h3>Comparing Categories</h3>
-        <p>This section compares CO2 emissions per capita, presenting different data visualizations for clearer insights.</p>
+        <h3>Comparing Categories (Annual Emissions for 2018)</h3>
+        <p>This section compares CO2 emissions per capita in the year 2018 for different countries.</p>
         
-        <!-- Container for the bar chart -->
-        <div id="bar-chart"></div>
-
+        <!-- Container for the 2018 bar chart -->
+        <div id="bar-chart-2018"></div>
+        
         <!-- Button to toggle sorting -->
         <div style="margin-top: 10px;">
-            <button onclick="sortBars()">Sort by Emissions</button>
+            <button onclick="sortBars2018()">Sort by Emissions (2018)</button>
         </div>
     </section>
 
-    <!-- Script for the bar chart with tooltip and sorting functionality -->
+    <!-- Section for decade average emissions (2010-2020) -->
+    <section id="decade-comparison">
+        <h3>Comparing Categories (Decade Average 2010-2020)</h3>
+        <p>This section compares the average CO2 emissions per capita for the decade 2010-2020.</p>
+        
+        <!-- Container for the decade average bar chart -->
+        <div id="bar-chart-decade"></div>
+    </section>
+
+    <!-- Script for both bar charts -->
     <script>
-        // Sample data for the year 2018
-        const data = [
+        // Data for the year 2018
+        const data2018 = [
             { country: "Germany", emissions: 9.1 },
             { country: "Italy", emissions: 5.8 },
             { country: "China", emissions: 7.3 },
@@ -43,97 +52,68 @@
             { country: "USA", emissions: 16.2 }
         ];
 
-        // Chart settings
-        const width = 500;
-        const height = 300;
-        const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+        // Data for the decade average (2010-2020)
+        const dataDecade = [
+            { country: "China", emissions: 7.15 },
+            { country: "Germany", emissions: 9.49 },
+            { country: "Italy", emissions: 6.14 },
+            { country: "Russia", emissions: 11.50 },
+            { country: "United States", emissions: 16.50 }
+        ];
 
-        // Create the SVG element
-        const svg = d3.select("#bar-chart")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+        // Function to create a bar chart in a specified container with sorting
+        function createBarChart(data, containerId, sortButtonId, sortBy) {
+            // Chart settings
+            const width = 500;
+            const height = 300;
+            const margin = { top: 20, right: 30, bottom: 40, left: 40 };
 
-        // X-axis scale (country names)
-        const x = d3.scaleBand()
-            .domain(data.map(d => d.country))
-            .range([0, width - margin.left - margin.right])
-            .padding(0.1);
+            // Create the SVG element
+            const svg = d3.select(containerId)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        // Y-axis scale (emissions)
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.emissions)])
-            .range([height - margin.top - margin.bottom, 0]);
+            // X-axis scale (country names)
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.country))
+                .range([0, width - margin.left - margin.right])
+                .padding(0.1);
 
-        // Tooltip setup
-        const tooltip = d3.select("body").append("div")
-            .style("position", "absolute")
-            .style("background-color", "white")
-            .style("padding", "5px")
-            .style("border", "1px solid black")
-            .style("border-radius", "5px")
-            .style("visibility", "hidden");
+            // Y-axis scale (emissions)
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.emissions)])
+                .range([height - margin.top - margin.bottom, 0]);
 
-        // Add the bars with tooltip
-        svg.selectAll(".bar")
-            .data(data)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("x", d => x(d.country))
-            .attr("y", d => y(d.emissions))
-            .attr("width", x.bandwidth())
-            .attr("height", d => height - margin.top - margin.bottom - y(d.emissions))
-            .attr("fill", "steelblue")
-            .on("mouseover", function(event, d) {
-                tooltip.style("visibility", "visible")
-                       .text(`Emissions: ${d.emissions}t`);
-            })
-            .on("mousemove", function(event) {
-                tooltip.style("top", `${event.pageY - 10}px`)
-                       .style("left", `${event.pageX + 10}px`);
-            })
-            .on("mouseout", function() {
-                tooltip.style("visibility", "hidden");
-            });
-
-        // Add the X axis
-        svg.append("g")
-            .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
-            .call(d3.axisBottom(x));
-
-        // Add the Y axis
-        svg.append("g")
-            .call(d3.axisLeft(y));
-
-        // Sorting functionality
-        let sortByEmissions = true; // State variable for sorting
-
-        function sortBars() {
-            // Toggle sorting order
-            sortByEmissions = !sortByEmissions;
-
-            // Sort data
-            data.sort((a, b) => sortByEmissions ? b.emissions - a.emissions : a.country.localeCompare(b.country));
-
-            // Update button text
-            d3.select("button").text(sortByEmissions ? "Sort by Name" : "Sort by Emissions");
-
-            // Update the X domain
-            x.domain(data.map(d => d.country));
-
-            // Rearrange bars with animation
+            // Add the bars
             svg.selectAll(".bar")
-                .data(data, d => d.country)
-                .transition()
-                .duration(750)
-                .attr("x", d => x(d.country));
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.country))
+                .attr("y", d => y(d.emissions))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - margin.top - margin.bottom - y(d.emissions))
+                .attr("fill", "steelblue");
 
-            // Update the X axis
-            svg.select("g").call(d3.axisBottom(x));
+            // Add the X axis
+            svg.append("g")
+                .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
+                .call(d3.axisBottom(x));
+
+            // Add the Y axis
+            svg.append("g")
+                .call(d3.axisLeft(y));
         }
+
+        // Create the 2018 bar chart
+        createBarChart(data2018, "#bar-chart-2018");
+
+        // Create the decade average bar chart
+        createBarChart(dataDecade, "#bar-chart-decade");
     </script>
 </body>
 </html>
