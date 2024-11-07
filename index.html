@@ -25,17 +25,22 @@
         
         <!-- Container for the bar chart -->
         <div id="bar-chart"></div>
+
+        <!-- Button to toggle sorting -->
+        <div style="margin-top: 10px;">
+            <button onclick="sortBars()">Sort by Emissions</button>
+        </div>
     </section>
 
-    <!-- Script for the bar chart -->
+    <!-- Script for the bar chart with tooltip and sorting functionality -->
     <script>
-        // Sample data for the bar chart
+        // Sample data for the year 2018
         const data = [
-        { country: "Germany", emissions: 9.1 },
-        { country: "Italy", emissions: 5.8 },
-        { country: "China", emissions: 7.3 },
-        { country: "Russia", emissions: 11.8 },
-        { country: "USA", emissions: 16.2 }
+            { country: "Germany", emissions: 9.1 },
+            { country: "Italy", emissions: 5.8 },
+            { country: "China", emissions: 7.3 },
+            { country: "Russia", emissions: 11.8 },
+            { country: "USA", emissions: 16.2 }
         ];
 
         // Chart settings
@@ -62,7 +67,16 @@
             .domain([0, d3.max(data, d => d.emissions)])
             .range([height - margin.top - margin.bottom, 0]);
 
-        // Add the bars
+        // Tooltip setup
+        const tooltip = d3.select("body").append("div")
+            .style("position", "absolute")
+            .style("background-color", "white")
+            .style("padding", "5px")
+            .style("border", "1px solid black")
+            .style("border-radius", "5px")
+            .style("visibility", "hidden");
+
+        // Add the bars with tooltip
         svg.selectAll(".bar")
             .data(data)
             .enter()
@@ -72,7 +86,18 @@
             .attr("y", d => y(d.emissions))
             .attr("width", x.bandwidth())
             .attr("height", d => height - margin.top - margin.bottom - y(d.emissions))
-            .attr("fill", "steelblue");
+            .attr("fill", "steelblue")
+            .on("mouseover", function(event, d) {
+                tooltip.style("visibility", "visible")
+                       .text(`Emissions: ${d.emissions}t`);
+            })
+            .on("mousemove", function(event) {
+                tooltip.style("top", `${event.pageY - 10}px`)
+                       .style("left", `${event.pageX + 10}px`);
+            })
+            .on("mouseout", function() {
+                tooltip.style("visibility", "hidden");
+            });
 
         // Add the X axis
         svg.append("g")
@@ -82,6 +107,33 @@
         // Add the Y axis
         svg.append("g")
             .call(d3.axisLeft(y));
+
+        // Sorting functionality
+        let sortByEmissions = true; // State variable for sorting
+
+        function sortBars() {
+            // Toggle sorting order
+            sortByEmissions = !sortByEmissions;
+
+            // Sort data
+            data.sort((a, b) => sortByEmissions ? b.emissions - a.emissions : a.country.localeCompare(b.country));
+
+            // Update button text
+            d3.select("button").text(sortByEmissions ? "Sort by Name" : "Sort by Emissions");
+
+            // Update the X domain
+            x.domain(data.map(d => d.country));
+
+            // Rearrange bars with animation
+            svg.selectAll(".bar")
+                .data(data, d => d.country)
+                .transition()
+                .duration(750)
+                .attr("x", d => x(d.country));
+
+            // Update the X axis
+            svg.select("g").call(d3.axisBottom(x));
+        }
     </script>
 </body>
 </html>
