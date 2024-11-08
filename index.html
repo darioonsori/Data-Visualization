@@ -80,6 +80,9 @@
     
         <!-- Container for the heatmap chart -->
         <div id="heatmap-chart"></div>
+        
+        <!-- Tooltip for displaying emissions information on hover -->
+        <div class="tooltip" id="tooltip" style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 3px;"></div>
     </section>
 
     <!-- Script for the bar chart for Data at a Glance -->
@@ -593,14 +596,15 @@
             { country: "Canada", type: "Land-Use", emissions: 126558616.91 }
         ];
     
-        // Function to create the heatmap
+        // Function to create the heatmap with adjusted margins
         function createHeatmap(data) {
-            // Clear previous chart content
-            d3.select("#heatmap-chart").selectAll("*").remove();
-    
-            const margin = { top: 20, right: 30, bottom: 40, left: 100 };
+            // Adjusted margin values to give more space around the chart
+            const margin = { top: 30, right: 60, bottom: 60, left: 120 };
             const width = 600 - margin.left - margin.right;
             const height = 400 - margin.top - margin.bottom;
+    
+            // Clear previous chart content
+            d3.select("#heatmap-chart").selectAll("*").remove();
     
             // Create an SVG container for the heatmap
             const svg = d3.select("#heatmap-chart")
@@ -610,7 +614,7 @@
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
     
-            // Scales for axes and colors
+            // Scales for x-axis, y-axis, and color scale
             const x = d3.scaleBand()
                 .domain(["Fossil", "Land-Use"])
                 .range([0, width])
@@ -648,26 +652,30 @@
                     d3.select("#tooltip").style("visibility", "hidden");
                 });
     
-            // Add axes
+            // Add x-axis with labels for "Fossil" and "Land-Use"
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x));
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .style("text-anchor", "middle");
     
+            // Add y-axis with country names
             svg.append("g")
-                .call(d3.axisLeft(y));
+                .call(d3.axisLeft(y))
+                .selectAll("text")
+                .style("text-anchor", "end");
         }
     
-        // Initialize with data for 2018
+        // Initialize the heatmap with data for 2018
         createHeatmap(heatmapData2018);
     
-        // Update heatmap data based on user selection
+        // Update the heatmap when the user changes the selected time period
         d3.select("#heatmap-time-period").on("change", function() {
             const selectedTime = this.value;
             const selectedData = selectedTime === "2018" ? heatmapData2018 : heatmapDataDecade;
             createHeatmap(selectedData);
         });
     </script>
-    
 
 </body>
 </html>
