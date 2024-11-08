@@ -4,110 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Environmental Data Visualizations</title>
+    <!-- Add D3.js for chart creation -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        /* Stili per il grafico */
-        .bar { stroke: #fff; }
-        .axis text { font-size: 12px; }
-        .axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
-        .legend { font-size: 12px; }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
+            border-radius: 5px;
+            padding: 5px;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
+    <!-- Homepage title and subtitle -->
     <h1>Global Environmental Data Visualizations</h1>
+    <h2>Assignment 1 - Dario Onsori</h2>
 
-    <!-- Sezione Country Comparison -->
+    <!-- Project information section -->
+    <section>
+        <h3>About the Project</h3>
+        <p>This project presents interactive visualizations of global CO2 emissions data. The visualizations aim to provide insights into the per capita emissions, regional comparisons, and types of CO2 sources.</p>
+    </section>
+
+    <!-- Section for displaying annual or decade average emissions with selectors -->
+    <section id="comparing-categories">
+        <h3>Per Capita CO2 Emissions Comparison</h3>
+
+        <!-- Selector for choosing between year and decade -->
+        <label for="time-period">Select Time Period:</label>
+        <select id="time-period">
+            <option value="2018">Year: 2018</option>
+            <option value="decade">Decade: 2010-2020 (Average)</option>
+        </select>
+
+        <!-- Container for the bar chart -->
+        <div id="bar-chart"></div>
+        
+        <!-- Button to toggle sorting -->
+        <div style="margin-top: 10px;">
+            <button onclick="sortBars()">Sort by Emissions</button>
+        </div>
+    </section>
+
+    <!-- Country Comparison Section -->
     <section id="country-comparison">
-        <h2>Country Comparison</h2>
+        <h3>Country Comparison</h3>
+        <p>This section compares CO2 emissions per capita across different regions, highlighting the top 5 countries and an aggregated "Other" category for each region.</p>
+        
+        <!-- Container for stacked bar chart -->
         <div id="stacked-bar-chart"></div>
     </section>
 
+    <!-- Tooltip for mouseover display -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <!-- Script for stacked bar chart -->
     <script>
-        // Dati JSON per il grafico
-        const data = [
-            { region: "Africa", countries: { "South Africa": 7.5905123, "Algeria": 4.0850997, "Egypt": 2.3511286, "Morocco": 1.7343042, "Nigeria": 0.5322892, "Others": 1034.15657994 }},
-            { region: "Asia", countries: { "South Korea": 12.968438, "Japan": 9.042501, "China": 7.306582, "Indonesia": 2.224542, "India": 1.8941209, "Others": 1017.01373004 }},
-            { region: "Europe", countries: { "Germany": 9.105443, "Italy": 5.8423834, "Spain": 5.740303, "United Kingdom": 5.7159815, "France": 5.010727, "Others": 1019.03507604 }},
-            { region: "North America", countries: { "United States": 16.191355, "Canada": 15.581538, "Mexico": 3.792204, "Others": 1014.88481694 }},
-            { region: "South America", countries: { "Chile": 4.515097, "Argentina": 4.066307, "Brazil": 2.2743797, "Colombia": 1.7678044, "Peru": 1.7342052, "Others": 1036.09212064 }},
-            { region: "Oceania", countries: { "Australia": 16.627844, "New Zealand": 7.379144, "Papua New Guinea": 0.8153785, "Others": 1025.62754744 }}
+        // Sample data for the stacked bar chart (replace this with your processed data)
+        const stackedData = [
+            { Region: "Africa", Country: "Libya", Emissions: 8.339181 },
+            { Region: "Africa", Country: "South Africa", Emissions: 7.590512 },
+            { Region: "Africa", Country: "Seychelles", Emissions: 5.827153 },
+            { Region: "Africa", Country: "Algeria", Emissions: 4.085100 },
+            { Region: "Africa", Country: "Equatorial Guinea", Emissions: 4.000027 },
+            { Region: "Africa", Country: "Other", Emissions: 31.802244 },
+            // Add other regions and countries here
         ];
 
-        // Impostazioni del grafico
-        const margin = { top: 30, right: 30, bottom: 50, left: 60 };
-        const width = 700 - margin.left - margin.right;
+        // Chart settings
+        const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+        const width = 800 - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
 
+        // SVG container
         const svg = d3.select("#stacked-bar-chart")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        // Preparazione dei dati
-        const keys = Object.keys(data[0].countries);
-        const series = d3.stack()
-            .keys(keys)
-            .value((d, key) => d.countries[key])(data);
-
-        const x = d3.scaleBand()
-            .domain(data.map(d => d.region))
+        // X and Y scales
+        const xScale = d3.scaleBand()
+            .domain(stackedData.map(d => d.Region))
             .range([0, width])
             .padding(0.2);
 
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(series, s => d3.max(s, d => d[1]))])
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(stackedData, d => d.Emissions)])
             .range([height, 0]);
 
-        const color = d3.scaleOrdinal()
-            .domain(keys)
-            .range(d3.schemeCategory10);
+        // Color scale
+        const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
 
-        // Aggiunta delle barre impilate
-        svg.append("g")
-            .selectAll("g")
-            .data(series)
-            .join("g")
-            .attr("fill", d => color(d.key))
-            .selectAll("rect")
-            .data(d => d)
-            .join("rect")
-            .attr("x", d => x(d.data.region))
-            .attr("y", d => y(d[1]))
-            .attr("height", d => y(d[0]) - y(d[1]))
-            .attr("width", x.bandwidth())
-            .attr("class", "bar")
-            .append("title")  // Tooltip per il valore esatto
-            .text(d => `Value: ${d[1] - d[0]}`);
-
-        // Aggiunta degli assi
-        svg.append("g")
-            .attr("transform", `translate(0,${height})`)
-            .call(d3.axisBottom(x));
-
-        svg.append("g")
-            .call(d3.axisLeft(y));
-
-        // Legenda
-        const legend = svg.append("g")
-            .attr("class", "legend")
-            .attr("transform", `translate(${width + 20}, 0)`);
-        
-        keys.forEach((key, i) => {
-            const legendRow = legend.append("g")
-                .attr("transform", `translate(0, ${i * 20})`);
-
-            legendRow.append("rect")
-                .attr("width", 10)
-                .attr("height", 10)
-                .attr("fill", color(key));
-
-            legendRow.append("text")
-                .attr("x", 20)
-                .attr("y", 10)
-                .text(key);
+        // Stack data by Region
+        const regions = d3.group(stackedData, d => d.Region);
+        let processedData = [];
+        regions.forEach((values, key) => {
+            let total = 0;
+            values.forEach(d => {
+                processedData.push({ region: key, country: d.Country, emissions: d.Emissions, start: total });
+                total += d.Emissions;
+            });
         });
+
+        // Draw bars
+        svg.selectAll(".bar")
+            .data(processedData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => xScale(d.region))
+            .attr("y", d => yScale(d.start + d.emissions))
+            .attr("width", xScale.bandwidth())
+            .attr("height", d => height - yScale(d.emissions))
+            .attr("fill", d => colorScale(d.country))
+            .on("mouseover", function(event, d) {
+                d3.select("#tooltip")
+                    .style("visibility", "visible")
+                    .text(`${d.country}: ${d.emissions.toFixed(2)} t`);
+            })
+            .on("mousemove", function(event) {
+                d3.select("#tooltip")
+                    .style("top", `${event.pageY - 10}px`)
+                    .style("left", `${event.pageX + 10}px`);
+            })
+            .on("mouseout", function() {
+                d3.select("#tooltip").style("visibility", "hidden");
+            });
+
+        // X-axis
+        svg.append("g")
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(xScale));
+
+        // Y-axis
+        svg.append("g")
+            .call(d3.axisLeft(yScale).ticks(5));
     </script>
 </body>
 </html>
