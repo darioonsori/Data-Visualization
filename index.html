@@ -16,7 +16,7 @@
         }
     </style>
 </head>
-<body>
+<>
     <h1>Global Environmental Data Visualizations</h1>
     <h2>Assignment 1 - Dario Onsori</h2>
 
@@ -40,14 +40,23 @@
 
     <!-- Country Comparison Section -->
     <section id="country-comparison">
-        <h3>Country Comparison</h3>
-        <p>This section compares CO2 emissions per capita for the year 2018 across different regions, highlighting the top 5 countries and an aggregated "Other" category for each region.</p>
+      <h3>Country Comparison</h3>
+      <p>This section compares CO2 emissions per capita for the year 2018 across different regions, highlighting the top 5 countries and an aggregated "Other" category for each region.</p>
         
-        <div id="stacked-bar-chart"></div>
+      <div id="stacked-bar-chart"></div>
+        
     </section>
 
-    <div class="tooltip" id="tooltip"></div>
+    <!-- Country Comparison - Small Multiple Section -->
+    <section id="country-comparison-multiple">
+      <h3>Country Comparison - Small Multiple</h3>
+      <p>This section displays the CO2 emissions per capita for the year 2018 for each region using a "small multiple" stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other" category.</p>
 
+      <!-- Container for the small multiple stacked bar charts -->
+      <div id="small-multiples"></div>
+
+    <div class="tooltip" id="tooltip"></div>
+    </section>
     <!-- Script for the bar chart for Data at a Glance -->
     <script>
         const data2018 = [
@@ -249,5 +258,97 @@
             .attr("transform", `translate(0, ${height})`)
             .call(d3.axisBottom(xScale).ticks(5));
     </script>
+<!-- Script for horizontal stacked bar chart in Country Comparison - Small Multiple -->
+    <script>
+      const stackedDataMultiple = {
+          "Africa": [
+              { country: "Libya", emissions: 8.339181 },
+              { country: "South Africa", emissions: 7.590512 },
+              { country: "Seychelles", emissions: 5.827153 },
+              { country: "Algeria", emissions: 4.085100 },
+              { country: "Equatorial Guinea", emissions: 4.000027 },
+              { country: "Other", emissions: 31.802244 }
+          ],
+          "Asia": [
+              { country: "Qatar", emissions: 34.504090 },
+              { country: "Kuwait", emissions: 24.448280 },
+              { country: "United Arab Emirates", emissions: 22.896563 },
+              { country: "Bahrain", emissions: 21.943077 },
+              { country: "Brunei", emissions: 21.516985 },
+              { country: "Other", emissions: 179.133522 }
+          ],
+          // Add data for other regions here...
+      };
+
+      const marginMultiple = { top: 20, right: 20, bottom: 30, left: 60 };
+      const widthMultiple = 300 - marginMultiple.left - marginMultiple.right;
+      const heightMultiple = 200 - marginMultiple.top - marginMultiple.bottom;
+
+      const colorScaleMultiple = d3.scaleOrdinal(d3.schemeTableau10);
+
+      const svgContainerMultiple = d3.select("#small-multiples")
+          .selectAll("svg")
+          .data(Object.keys(stackedDataMultiple))
+          .enter()
+          .append("svg")
+          .attr("width", widthMultiple + marginMultiple.left + marginMultiple.right)
+          .attr("height", heightMultiple + marginMultiple.top + marginMultiple.bottom)
+          .append("g")
+          .attr("transform", `translate(${marginMultiple.left},${marginMultiple.top})`);
+
+      svgContainerMultiple.each(function(region) {
+          const svg = d3.select(this);
+          const data = stackedDataMultiple[region];
+
+          let cumulative = 0;
+          data.forEach(d => {
+              d.start = cumulative;
+              cumulative += d.emissions;
+          });
+
+          const xScaleMultiple = d3.scaleLinear()
+              .domain([0, cumulative])
+              .range([0, widthMultiple]);
+
+          const yScaleMultiple = d3.scaleBand()
+              .domain([region])
+              .range([0, heightMultiple / 2]);
+
+          svg.append("text")
+              .attr("class", "chart-title")
+              .attr("x", widthMultiple / 2)
+              .attr("y", -5)
+              .attr("text-anchor", "middle")
+              .text(region);
+
+          svg.selectAll("rect")
+              .data(data)
+              .enter()
+              .append("rect")
+              .attr("x", d => xScaleMultiple(d.start))
+              .attr("y", yScaleMultiple(region))
+              .attr("width", d => xScaleMultiple(d.emissions))
+              .attr("height", yScaleMultiple.bandwidth() - 20)
+              .attr("fill", d => colorScaleMultiple(d.country))
+              .on("mouseover", function(event, d) {
+                  d3.select("#tooltip")
+                      .style("visibility", "visible")
+                      .text(`${d.country}: ${d.emissions.toFixed(2)} t`);
+              })
+              .on("mousemove", function(event) {
+                  d3.select("#tooltip")
+                      .style("top", `${event.pageY - 10}px`)
+                      .style("left", `${event.pageX + 10}px`);
+              })
+              .on("mouseout", function() {
+                  d3.select("#tooltip").style("visibility", "hidden");
+              });
+
+          svg.append("g")
+              .attr("transform", `translate(0,${heightMultiple / 2})`)
+              .call(d3.axisBottom(xScaleMultiple).ticks(5));
+      });
+    </script>
+
 </body>
 </html>
