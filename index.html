@@ -162,7 +162,7 @@
         });
     </script>
 
-    <!-- Script for stacked bar chart in Country Comparison -->
+    <!-- Script for horizontal stacked bar chart in Country Comparison -->
     <script>
         // Complete dataset for the stacked bar chart
         const stackedData = [
@@ -217,15 +217,15 @@
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        // X and Y scales
-        const xScale = d3.scaleBand()
-            .domain(stackedData.map(d => d.Region))
-            .range([0, width])
-            .padding(0.2);
-
-        const yScale = d3.scaleLinear()
+        // X and Y scales (flipped for horizontal bars)
+        const xScale = d3.scaleLinear()
             .domain([0, d3.max(stackedData, d => d.Emissions)])
-            .range([height, 0]);
+            .range([0, width]);
+
+        const yScale = d3.scaleBand()
+            .domain(stackedData.map(d => d.Region))
+            .range([0, height])
+            .padding(0.2);
 
         // Color scale
         const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
@@ -247,10 +247,10 @@
             .enter()
             .append("rect")
             .attr("class", "bar")
-            .attr("x", d => xScale(d.region))
-            .attr("y", d => yScale(d.start + d.emissions))
-            .attr("width", xScale.bandwidth())
-            .attr("height", d => height - yScale(d.emissions))
+            .attr("y", d => yScale(d.region))
+            .attr("x", d => xScale(d.start))
+            .attr("height", yScale.bandwidth())
+            .attr("width", d => xScale(d.emissions))
             .attr("fill", d => colorScale(d.country))
             .on("mouseover", function(event, d) {
                 d3.select("#tooltip")
@@ -266,14 +266,14 @@
                 d3.select("#tooltip").style("visibility", "hidden");
             });
 
-        // X-axis
+        // Y-axis (regions)
+        svg.append("g")
+            .call(d3.axisLeft(yScale));
+
+        // X-axis (emissions)
         svg.append("g")
             .attr("transform", `translate(0, ${height})`)
-            .call(d3.axisBottom(xScale));
-
-        // Y-axis
-        svg.append("g")
-            .call(d3.axisLeft(yScale).ticks(5));
+            .call(d3.axisBottom(xScale).ticks(5));
     </script>
 </body>
 </html>
