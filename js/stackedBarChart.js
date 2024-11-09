@@ -1,4 +1,4 @@
-// Mappa per associare ciascun paese alla propria regione e includere "Other" con il valore fornito
+// Map to associate each country with its region and include "Other" with the provided value
 const regionMap = {
   "Libya": "Africa",
   "South Africa": "Africa",
@@ -43,32 +43,32 @@ const regionMap = {
   "OtherSouthAmerica": { region: "South America", emissions: 13.194629 }
 };
 
-// Carica i dati dal file CSV
+// Load data from the CSV file
 d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
-  // Filtra i dati per l'anno 2018 e aggiungi la regione per ciascun paese usando regionMap
+  // Filter data for the year 2018 and add the region for each country using regionMap
   const data2018 = data.filter(d => d.Year === "2018").map(d => ({
     country: d.Entity,
     emissions: +d["Annual CO₂ emissions (per capita)"],
     region: regionMap[d.Entity]
-  })).filter(d => d.region && !d.region.emissions); // Rimuove i paesi senza regione e "Other"
+  })).filter(d => d.region && !d.region.emissions); // Remove countries without region and "Other"
 
-  // Gruppo di dati "Other" basato sui valori predefiniti
+  // Predefined "Other" data based on the values provided
   const otherData = Object.values(regionMap).filter(d => d.emissions).map(d => ({
     country: "Other",
     emissions: d.emissions,
     region: d.region
   }));
 
-  // Combina i dati filtrati con i dati "Other"
+  // Combine filtered data with "Other" data
   const combinedData = [...data2018, ...otherData];
 
-  // Raggruppa i dati per regione
+  // Group data by region
   const regionData = d3.groups(combinedData, d => d.region).map(([region, countries]) => {
-    // Ordina i paesi per emissioni discendenti e seleziona i primi 5
+    // Sort countries by emissions in descending order and select the top 5
     countries.sort((a, b) => b.emissions - a.emissions);
     const top5 = countries.slice(0, 5);
 
-    // Verifica se esiste "Other" nella lista e lo posiziona alla fine
+    // Find and add "Other" at the end if it exists
     const other = countries.find(d => d.country === "Other");
     if (other) top5.push(other);
 
@@ -81,7 +81,7 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     };
   });
 
-  // Configura il grafico
+  // Set up the chart
   const margin = { top: 20, right: 30, bottom: 40, left: 100 };
   const width = 800 - margin.left - margin.right;
   const height = 400 - margin.top - margin.bottom;
@@ -93,21 +93,21 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     .append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-  // Scala X per le emissioni
+  // X scale for emissions
   const xScale = d3.scaleLinear()
     .domain([0, d3.max(regionData, d => d3.sum(d.emissions, e => e.emissions))])
     .range([0, width]);
 
-  // Scala Y per le regioni
+  // Y scale for regions
   const yScale = d3.scaleBand()
     .domain(regionData.map(d => d.region))
     .range([0, height])
     .padding(0.2);
 
-  // Scala dei colori per i paesi, assegnando un colore diverso a ciascun paese
-  const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+  // Color scale for countries, ensuring distinct colors within each region
+  const colorScale = d3.scaleOrdinal(d3.schemeTableau10.concat(["#FF5733", "#C70039", "#900C3F", "#581845", "#FFC300"]));
 
-  // Prepara i dati per il grafico
+  // Prepare the data for the chart
   let processedData = [];
   regionData.forEach(d => {
     let cumulativeEmissions = 0;
@@ -122,7 +122,7 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     });
   });
 
-  // Disegna le barre impilate
+  // Draw stacked bars
   svg.selectAll(".bar")
     .data(processedData)
     .enter()
@@ -147,13 +147,13 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
       d3.select("#tooltip").style("visibility", "hidden");
     });
 
-  // Asse Y per le regioni
+  // Y-axis for regions
   svg.append("g")
     .call(d3.axisLeft(yScale).tickSizeOuter(0))
     .selectAll("text")
     .style("font-size", "14px");
 
-  // Asse X per le emissioni
+  // X-axis for emissions
   svg.append("g")
     .attr("transform", `translate(0, ${height})`)
     .call(d3.axisBottom(xScale).ticks(5));
