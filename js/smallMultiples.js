@@ -1,5 +1,3 @@
-// Assuming regionMap is already declared earlier, we don't need to declare it again
-
 // Define a map with "Other" emissions values for each region
 const otherEmissions = {
   "Africa": 31.802244,
