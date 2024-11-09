@@ -44,7 +44,7 @@ const regionMap = {
 };
 
 // Carica i dati dal file CSV
-d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
+d3.csv("data/co-emissions-per-capita.csv").then(data => {
   // Filtra i dati per l'anno 2018 e aggiungi la regione per ciascun paese usando regionMap
   const data2018 = data.filter(d => d.Year === "2018").map(d => ({
     country: d.Entity,
@@ -67,6 +67,10 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     // Ordina i paesi per emissioni discendenti e seleziona i primi 5
     countries.sort((a, b) => b.emissions - a.emissions);
     const top5 = countries.slice(0, 5);
+
+    // Aggiunge "Other" come ultimo elemento
+    const other = countries.find(d => d.country === "Other");
+    if (other) top5.push(other);
 
     return {
       region: region,
@@ -100,10 +104,8 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     .range([0, height])
     .padding(0.2);
 
-  // Scala dei colori per i paesi
-  const colorScale = d3.scaleOrdinal()
-    .domain(combinedData.map(d => d.country))
-    .range(d3.schemeTableau10.concat(["#FF5733", "#C70039", "#900C3F", "#581845", "#FFC300"]));
+  // Scala dei colori per i paesi, assegnando un colore diverso a ciascun paese
+  const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
   // Prepara i dati per il grafico
   let processedData = [];
