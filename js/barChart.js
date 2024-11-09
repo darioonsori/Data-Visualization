@@ -73,7 +73,7 @@ function sortBars() {
 
 // Load data from CSV file and initialize chart
 d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
-    const countries = ["China", "Germany", "Italy", "India", "South Africa", "Turkey", "United States"];
+    const countries = ["China", "Germany", "Italy", "South Africa", "Turkey", "United States"];
     data2018 = data.filter(d => d.Year === "2018" && countries.includes(d.Entity)).map(d => ({
         country: d.Entity,
         emissions: +d["Annual CO₂ emissions (per capita)"]
