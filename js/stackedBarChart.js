@@ -1,4 +1,4 @@
-// Map to associate each country with its region and include "Other" with the provided value
+// Map to associate each country with its region and define "Other" with the provided value
 const regionMap = {
   "Libya": "Africa",
   "South Africa": "Africa",
@@ -50,7 +50,7 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     country: d.Entity,
     emissions: +d["Annual CO₂ emissions (per capita)"],
     region: regionMap[d.Entity]
-  })).filter(d => d.region && !d.region.emissions); // Remove countries without region and "Other"
+  })).filter(d => d.region && !d.region.emissions); // Exclude countries without region and "Other"
 
   // Predefined "Other" data based on the values provided
   const otherData = Object.values(regionMap).filter(d => d.emissions).map(d => ({
@@ -66,9 +66,9 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
   const regionData = d3.groups(combinedData, d => d.region).map(([region, countries]) => {
     // Sort countries by emissions in descending order and select the top 5
     countries.sort((a, b) => b.emissions - a.emissions);
-    const top5 = countries.slice(0, 5);
+    const top5 = countries.filter(d => d.country !== "Other").slice(0, 5);
 
-    // Find and add "Other" at the end if it exists
+    // Add "Other" only once at the end of the list
     const other = countries.find(d => d.country === "Other");
     if (other) top5.push(other);
 
