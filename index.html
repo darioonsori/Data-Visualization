@@ -1,87 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Environmental Data Visualizations</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Environmental Data Visualizations</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .tooltip {
+      position: absolute;
+      background-color: white;
+      border: 1px solid black;
+      border-radius: 5px;
+      padding: 5px;
+      visibility: hidden;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>Global Environmental Data Visualizations</h1>
-    <h2>Assignment 1 - Dario Onsori</h2>
+  <h1>Global Environmental Data Visualizations</h1>
+  <h2>Assignment 1 - Dario Onsori</h2>
 
-    <!-- Data at a Glance Section -->
-    <section id="data-at-glance">
-        <h3>Data at a Glance</h3>
-        <p>This section presents a quick comparison of CO₂ emissions for the year 2018 and the average decade 2010-2020.</p>
+  <!-- Data at a Glance Section -->
+  <section id="data-at-glance">
+    <h3>Data at a Glance</h3>
+    <p>This section presents a quick comparison of CO₂ emissions for the year 2018 and the average decade 2010-2020.</p>
 
-        <!-- Selector for choosing between year and decade -->
-        <label for="time-period">Select Time Period:</label>
-        <select id="time-period">
-            <option value="2018">Year: 2018</option>
-            <option value="decade">Decade: 2010-2020 (Average)</option>
-        </select>
+    <!-- Selector for choosing between year and decade -->
+    <label for="time-period">Select Time Period:</label>
+    <select id="time-period">
+      <option value="2018">Year: 2018</option>
+      <option value="decade">Decade: 2010-2020 (Average)</option>
+    </select>
 
-        <!-- Container for the bar chart -->
-        <div id="bar-chart"></div>
+    <!-- Container for the bar chart -->
+    <div id="bar-chart"></div>
 
-        <!-- Button to toggle sorting -->
-        <div style="margin-top: 10px;">
-            <button onclick="sortBars()">Sort by Emissions</button>
-        </div>
-    </section>
+    <!-- Button to toggle sorting -->
+    <div style="margin-top: 10px;">
+      <button onclick="sortBars()">Sort by Emissions</button>
+    </div>
+  </section>
 
-    <!-- Country Comparison Section -->
-    <section id="country-comparison">
-        <h3>Country Comparison</h3>
-        <p>This section compares CO₂ emissions per capita for the year 2018 across different regions, highlighting the top 5 countries and an aggregated "Other" category for each region.</p>
-        
-        <div id="stacked-bar-chart"></div>
-    </section>
 
-    <!-- Country Comparison - Small Multiple Section -->
-    <section id="country-comparison-multiple">
-        <h3>Country Comparison - Small Multiple</h3>
-        <p>This section displays the CO₂ emissions per capita for the year 2018 for each region using a "small multiple" stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other" category.</p>
+  <!-- Country Comparison Section -->
+  <section id="country-comparison">
+    <h3>Country Comparison</h3>
+    <p>This section compares CO2 emissions per capita for the year 2018 across different regions, highlighting the top 5
+      countries and an aggregated "Other" category for each region.</p>
 
-        <!-- Container for the small multiple stacked bar charts -->
-        <div id="small-multiples"></div>
-    </section>
+    <div id="stacked-bar-chart"></div>
+  </section>
 
-    <!-- Country Comparison - Stacked Bar Chart 100% Section -->
-    <section id="country-comparison-100">
-        <h3>Country Comparison - Stacked Bar Chart 100%</h3>
-        <p>This section shows the CO₂ emissions per capita for each region as a 100% stacked bar chart, displaying the relative proportions of emissions from the top-5 countries and the "Other" category.</p>
+  <!-- Country Comparison - Small Multiple Section -->
+  <section id="country-comparison-multiple">
+    <h3>Country Comparison - Small Multiple</h3>
+    <p>This section displays the CO2 emissions per capita for the year 2018 for each region using a "small multiple"
+      stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other" category.
+    </p>
 
-        <!-- Container for the 100% stacked bar chart -->
-        <div id="stacked-bar-100-chart"></div>
-    </section>
-    
-    <!-- Country Comparison - CO₂ Emissions by Type (Heatmap) -->
-    <section id="country-comparison-heatmap">
-        <h3>Country Comparison - CO₂ Emissions by Type (Heatmap)</h3>
-        <p>This heatmap shows the CO₂ emissions from fossil fuels and land-use for the top-10 emitting countries in the selected year or decade.</p>
-        
-        <!-- Selector for choosing between year and decade -->
-        <label for="heatmap-time-period">Select Time Period:</label>
-        <select id="heatmap-time-period">
-            <option value="2018">Year: 2018</option>
-            <option value="decade">Decade: 2010-2020 (Average)</option>
-        </select>
-    
-        <!-- Container for the heatmap chart -->
-        <div id="heatmap-chart"></div>
-    </section>
+    <!-- Container for the small multiple stacked bar charts -->
+    <div id="small-multiples"></div>
+
+    <div class="tooltip" id="tooltip"></div>
+  </section>
+
+  <!-- Country Comparison - Stacked Bar Chart 100% Section -->
+  <section id="country-comparison-100">
+    <h3>Country Comparison - Stacked Bar Chart 100%</h3>
+    <p>This section shows the CO2 emissions per capita for each region as a 100% stacked bar chart, displaying the
+      relative proportions of emissions from the top-5 countries and the "Other" category.</p>
+
+    <!-- Container for the 100% stacked bar chart -->
+    <div id="stacked-bar-100-chart"></div>
+  </section>
+
+  <!-- Country Comparison - CO₂ Emissions by Type (Heatmap) -->
+  <section id="country-comparison-heatmap">
+    <h3>Country Comparison - CO₂ Emissions by Type (Heatmap)</h3>
+    <p>This heatmap shows the CO₂ emissions from fossil fuels and land-use for the top-10 emitting countries in the
+      selected year or decade.</p>
+
+    <!-- Selector for choosing between year and decade -->
+    <label for="heatmap-time-period">Select Time Period:</label>
+    <select id="heatmap-time-period">
+      <option value="2018">Year: 2018</option>
+      <option value="decade">Decade: 2010-2020 (Average)</option>
+    </select>
+
+    <!-- Container for the heatmap chart -->
+    <div id="heatmap-chart"></div>
 
     <!-- Tooltip for displaying emissions information on hover -->
-    <div class="tooltip" id="tooltip" style="position: absolute; background-color: white; border: 1px solid black; padding: 5px; border-radius: 3px; visibility: hidden;"></div>
+    <div class="tooltip" id="tooltip"
+      style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 3px;">
+    </div>
+  </section>
 
-    <!-- Link to JavaScript files for each section -->
-    <script src="js/barChart.js"></script>
-    <script src="js/stackedBarChart.js"></script>
-    <script src="js/smallMultiples.js"></script>
-    <script src="js/stackedBarChart100.js"></script>
-    <script src="js/heatmap.js"></script>
+  <section id="country-selector">
+    <h3>Select Countries</h3>
+    <p>Select the countries you want to include in the charts.</p>
+    <select id="country-list" multiple>
+      <!-- Options will be dynamically generated by JavaScript -->
+    </select>
+    <button onclick="updateSelectedCountries()">Update Chart</button>
+  </section>
+
+
+
+  <!-- Link to JavaScript files for each section -->
+
+  <!-- Script for the bar chart for Data at a Glance -->
+  <script src="js/barChart.js"></script>
+
+  <!-- Script for horizontal stacked bar chart in Country Comparison -->
+  <script src="js/stackedBarChart.js"></script>
+
+  <!-- Script for horizontal stacked bar chart in Country Comparison - Small Multiple -->
+  <script src="js/smallMultiples.js"></script>
+
+  <!-- Script for horizontal Stacked bar chart 100% -->
+  <script src="js/stackedBarChart100.js"></script>
+
+  <!-- Script for the heatmap -->
+  <script src="js/heatmap.js"></script>
+
 </body>
+
 </html>
