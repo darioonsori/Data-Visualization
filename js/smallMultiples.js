@@ -1,3 +1,5 @@
+// Assuming regionMap is already declared earlier, we don't need to declare it again
+
 // Define a map with "Other" emissions values for each region
 const otherEmissions = {
   "Africa": 31.802244,
@@ -8,47 +10,13 @@ const otherEmissions = {
   "South America": 13.194629
 };
 
-// Map to associate each country with its region
-const regionMap = {
-  "Libya": "Africa",
-  "South Africa": "Africa",
-  "Seychelles": "Africa",
-  "Algeria": "Africa",
-  "Equatorial Guinea": "Africa",
-  "Qatar": "Asia",
-  "Kuwait": "Asia",
-  "United Arab Emirates": "Asia",
-  "Bahrain": "Asia",
-  "Brunei": "Asia",
-  "Kazakhstan": "Europe",
-  "Luxembourg": "Europe",
-  "Estonia": "Europe",
-  "Russia": "Europe",
-  "Iceland": "Europe",
-  "Trinidad and Tobago": "North America",
-  "United States": "North America",
-  "Canada": "North America",
-  "Antigua and Barbuda": "North America",
-  "Bahamas": "North America",
-  "Australia": "Oceania",
-  "Palau": "Oceania",
-  "New Zealand": "Oceania",
-  "Nauru": "Oceania",
-  "Marshall Islands": "Oceania",
-  "Chile": "South America",
-  "Argentina": "South America",
-  "Suriname": "South America",
-  "Venezuela": "South America",
-  "Guyana": "South America"
-};
-
 // Load data from the CSV file
 d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
   // Filter data for the year 2018 and add the region for each country using regionMap
   const data2018 = data.filter(d => d.Year === "2018").map(d => ({
     country: d.Entity,
     emissions: +d["Annual CO₂ emissions (per capita)"],
-    region: regionMap[d.Entity]
+    region: regionMap[d.Entity]  // Use the existing regionMap
   })).filter(d => d.region); // Exclude countries without a region
 
   // Group data by region
