@@ -13,14 +13,14 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     countries.sort((a, b) => b.emissions - a.emissions);
     const top5 = countries.slice(0, 5);
 
-    // Calculate the emissions for the "Other" category
+    // Calculate the emissions for the "Other" category and add it as the last item
     const otherEmissions = d3.sum(countries.slice(5), d => d.emissions);
     top5.push({ country: "Other", emissions: otherEmissions });
 
     // Calculate total emissions for the region
     const totalEmissions = d3.sum(top5, d => d.emissions);
 
-    // Convert emissions to percentages
+    // Convert emissions to percentages and accumulate the starting positions
     let cumulativePercent = 0;
     return top5.map(d => {
       const percent = (d.emissions / totalEmissions) * 100;
