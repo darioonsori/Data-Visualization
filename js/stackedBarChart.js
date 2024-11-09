@@ -33,7 +33,7 @@ const regionMap = {
 };
 
 // Carica i dati dal file CSV
-d3.csv("data/co-emissions-per-capita.csv").then(data => {
+d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
   // Filtra i dati per l'anno 2018 e aggiungi la regione per ciascun paese usando regionMap
   const data2018 = data.filter(d => d.Year === "2018").map(d => ({
     country: d.Entity,
