@@ -1,131 +1,99 @@
-// Data for the 100% Stacked Bar Chart
-const stackedDataPercent = {
-  "Africa": [
-    { country: "Libya", emissions: 8.339181 },
-    { country: "South Africa", emissions: 7.590512 },
-    { country: "Seychelles", emissions: 5.827153 },
-    { country: "Algeria", emissions: 4.085100 },
-    { country: "Equatorial Guinea", emissions: 4.000027 },
-    { country: "Other", emissions: 31.802244 }
-  ],
-  "Asia": [
-    { country: "Qatar", emissions: 34.504090 },
-    { country: "Kuwait", emissions: 24.448280 },
-    { country: "United Arab Emirates", emissions: 22.896563 },
-    { country: "Bahrain", emissions: 21.943077 },
-    { country: "Brunei", emissions: 21.516985 },
-    { country: "Other", emissions: 179.133522 }
-  ],
-  "Europe": [
-    { country: "Kazakhstan", emissions: 16.569881 },
-    { country: "Luxembourg", emissions: 15.748627 },
-    { country: "Estonia", emissions: 13.527124 },
-    { country: "Russia", emissions: 11.757415 },
-    { country: "Iceland", emissions: 10.395095 },
-    { country: "Other", emissions: 236.507179 }
-  ],
-  "North America": [
-    { country: "Trinidad and Tobago", emissions: 26.801151 },
-    { country: "United States", emissions: 16.191355 },
-    { country: "Canada", emissions: 15.581538 },
-    { country: "Antigua and Barbuda", emissions: 6.716774 },
-    { country: "Bahamas", emissions: 6.025971 },
-    { country: "Other", emissions: 42.077580 }
-  ],
-  "Oceania": [
-    { country: "Australia", emissions: 16.627844 },
-    { country: "Palau", emissions: 11.880807 },
-    { country: "New Zealand", emissions: 7.379144 },
-    { country: "Nauru", emissions: 4.599548 },
-    { country: "Marshall Islands", emissions: 3.185256 },
-    { country: "Other", emissions: 7.366800 }
-  ],
-  "South America": [
-    { country: "Chile", emissions: 4.515097 },
-    { country: "Argentina", emissions: 4.066307 },
-    { country: "Suriname", emissions: 3.518976 },
-    { country: "Venezuela", emissions: 3.377444 },
-    { country: "Guyana", emissions: 3.186389 },
-    { country: "Other", emissions: 13.194629 }
-  ]
-};
+// Load data from the CSV file
+d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
+  // Filter data for the year 2018 and map each country to its region using regionMap
+  const data2018 = data.filter(d => d.Year === "2018").map(d => ({
+    country: d.Entity,
+    emissions: +d["Annual CO₂ emissions (per capita)"],
+    region: regionMap[d.Entity]  // Assumes regionMap is already defined
+  })).filter(d => d.region); // Exclude countries without a region
 
-const margin100 = { top: 20, right: 30, bottom: 40, left: 60 };
-const width100 = 800 - margin100.left - margin100.right;
-const height100 = 400 - margin100.top - margin100.bottom;
+  // Group data by region and prepare the 100% stacked bar data
+  const regionData = d3.groups(data2018, d => d.region).map(([region, countries]) => {
+    // Sort countries by emissions in descending order and select the top 5
+    countries.sort((a, b) => b.emissions - a.emissions);
+    const top5 = countries.slice(0, 5);
 
-const colorScale100 = d3.scaleOrdinal(d3.schemeTableau10);
+    // Calculate the emissions for the "Other" category
+    const otherEmissions = d3.sum(countries.slice(5), d => d.emissions);
+    top5.push({ country: "Other", emissions: otherEmissions });
 
-const svg100 = d3.select("#stacked-bar-100-chart")
-  .append("svg")
-  .attr("width", width100 + margin100.left + margin100.right)
-  .attr("height", height100 + margin100.top + margin100.bottom)
-  .append("g")
-  .attr("transform", `translate(${margin100.left}, ${margin100.top})`);
+    // Calculate total emissions for the region
+    const totalEmissions = d3.sum(top5, d => d.emissions);
 
-// Process data for 100% stacked bar chart
-const processedData100 = [];
-for (const region in stackedDataPercent) {
-  const regionData = stackedDataPercent[region];
-  const totalEmissions = d3.sum(regionData, d => d.emissions);
-
-  // Calculate relative percentage for each country
-  let cumulativePercent = 0;
-  regionData.forEach(d => {
-    const percent = (d.emissions / totalEmissions) * 100;
-    processedData100.push({
-      region: region,
-      country: d.country,
-      emissions: percent,
-      start: cumulativePercent
+    // Convert emissions to percentages
+    let cumulativePercent = 0;
+    const processed = top5.map(d => {
+      const percent = (d.emissions / totalEmissions) * 100;
+      const data = {
+        region: region,
+        country: d.country,
+        emissions: percent,
+        start: cumulativePercent
+      };
+      cumulativePercent += percent;
+      return data;
     });
-    cumulativePercent += percent;
-  });
-}
 
-// X and Y scales
-const xScale100 = d3.scaleLinear()
-  .domain([0, 100])
-  .range([0, width100]);
+    return processed;
+  }).flat();
 
-const yScale100 = d3.scaleBand()
-  .domain(Object.keys(stackedDataPercent))
-  .range([0, height100])
-  .padding(0.2);
+  // Set up the dimensions and scales
+  const margin100 = { top: 20, right: 30, bottom: 40, left: 60 };
+  const width100 = 800 - margin100.left - margin100.right;
+  const height100 = 400 - margin100.top - margin100.bottom;
 
-// Draw bars
-svg100.selectAll(".bar")
-  .data(processedData100)
-  .enter()
-  .append("rect")
-  .attr("class", "bar")
-  .attr("y", d => yScale100(d.region))
-  .attr("x", d => xScale100(d.start))
-  .attr("height", yScale100.bandwidth())
-  .attr("width", d => xScale100(d.emissions))
-  .attr("fill", d => colorScale100(d.country))
-  .on("mouseover", function (event, d) {
-    d3.select("#tooltip")
-      .style("visibility", "visible")
-      .text(`${d.country}: ${d.emissions.toFixed(2)}%`);
-  })
-  .on("mousemove", function (event) {
-    d3.select("#tooltip")
-      .style("top", `${event.pageY - 10}px`)
-      .style("left", `${event.pageX + 10}px`);
-  })
-  .on("mouseout", function () {
-    d3.select("#tooltip").style("visibility", "hidden");
-  });
+  const colorScale100 = d3.scaleOrdinal(d3.schemeTableau10);
 
-// Y-axis (regions)
-svg100.append("g")
-  .call(d3.axisLeft(yScale100).tickSizeOuter(0))
-  .selectAll("text")
-  .style("font-size", "14px");
+  const svg100 = d3.select("#stacked-bar-100-chart")
+    .append("svg")
+    .attr("width", width100 + margin100.left + margin100.right)
+    .attr("height", height100 + margin100.top + margin100.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin100.left}, ${margin100.top})`);
 
-// X-axis (percentage)
-svg100.append("g")
-  .attr("transform", `translate(0, ${height100})`)
-  .call(d3.axisBottom(xScale100).ticks(5).tickFormat(d => d + "%"));
+  // X and Y scales
+  const xScale100 = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, width100]);
 
+  const yScale100 = d3.scaleBand()
+    .domain([...new Set(processedData100.map(d => d.region))])
+    .range([0, height100])
+    .padding(0.2);
+
+  // Draw bars
+  svg100.selectAll(".bar")
+    .data(regionData)
+    .enter()
+    .append("rect")
+    .attr("class", "bar")
+    .attr("y", d => yScale100(d.region))
+    .attr("x", d => xScale100(d.start))
+    .attr("height", yScale100.bandwidth())
+    .attr("width", d => xScale100(d.emissions))
+    .attr("fill", d => colorScale100(d.country))
+    .on("mouseover", function (event, d) {
+      d3.select("#tooltip")
+        .style("visibility", "visible")
+        .text(`${d.country}: ${d.emissions.toFixed(2)}%`);
+    })
+    .on("mousemove", function (event) {
+      d3.select("#tooltip")
+        .style("top", `${event.pageY - 10}px`)
+        .style("left", `${event.pageX + 10}px`);
+    })
+    .on("mouseout", function () {
+      d3.select("#tooltip").style("visibility", "hidden");
+    });
+
+  // Y-axis (regions)
+  svg100.append("g")
+    .call(d3.axisLeft(yScale100).tickSizeOuter(0))
+    .selectAll("text")
+    .style("font-size", "14px");
+
+  // X-axis (percentage)
+  svg100.append("g")
+    .attr("transform", `translate(0, ${height100})`)
+    .call(d3.axisBottom(xScale100).ticks(5).tickFormat(d => d + "%"));
+});
