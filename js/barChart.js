@@ -1,7 +1,7 @@
 // Load data from the CSV file and create the bar chart
 d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
   // Filter data for the year 2018 and specific countries
-  const countries = ["China", "Germany", "Italy", "India", "South Africa", "Turkey", "United States"];
+  const countries = ["China", "Germany", "Italy", "South Africa", "Turkey", "United States"];
   const data2018 = data.filter(d => d.Year === "2018" && countries.includes(d.Entity)).map(d => ({
     country: d.Entity,
     emissions: +d["Annual CO₂ emissions (per capita)"]
