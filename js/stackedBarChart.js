@@ -33,7 +33,7 @@ const regionMap = {
 };
 
 // Carica i dati dal file CSV
-d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
+d3.csv("data/co-emissions-per-capita.csv").then(data => {
   // Filtra i dati per l'anno 2018 e aggiungi la regione per ciascun paese usando regionMap
   const data2018 = data.filter(d => d.Year === "2018").map(d => ({
     country: d.Entity,
@@ -43,8 +43,11 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
 
   // Raggruppa i dati per regione
   const regionData = d3.groups(data2018, d => d.region).map(([region, countries]) => {
+    // Ordina i paesi per emissioni discendenti e seleziona i primi 5
     countries.sort((a, b) => b.emissions - a.emissions);
     const top5 = countries.slice(0, 5);
+
+    // Somma le emissioni dei paesi restanti per la categoria "Other"
     const otherTotal = d3.sum(countries.slice(5), d => d.emissions);
 
     return {
