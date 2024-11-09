@@ -1,35 +1,46 @@
-// Mappa per associare ciascun paese alla propria regione
+// Mappa per associare ciascun paese alla propria regione e includere "Other" con il valore fornito
 const regionMap = {
   "Libya": "Africa",
   "South Africa": "Africa",
   "Seychelles": "Africa",
   "Algeria": "Africa",
   "Equatorial Guinea": "Africa",
+  "OtherAfrica": { region: "Africa", emissions: 31.802244 },
+  
   "Qatar": "Asia",
   "Kuwait": "Asia",
   "United Arab Emirates": "Asia",
   "Bahrain": "Asia",
   "Brunei": "Asia",
+  "OtherAsia": { region: "Asia", emissions: 179.133522 },
+  
   "Kazakhstan": "Europe",
   "Luxembourg": "Europe",
   "Estonia": "Europe",
   "Russia": "Europe",
   "Iceland": "Europe",
+  "OtherEurope": { region: "Europe", emissions: 236.507179 },
+  
   "Trinidad and Tobago": "North America",
   "United States": "North America",
   "Canada": "North America",
   "Antigua and Barbuda": "North America",
   "Bahamas": "North America",
+  "OtherNorthAmerica": { region: "North America", emissions: 42.077580 },
+  
   "Australia": "Oceania",
   "Palau": "Oceania",
   "New Zealand": "Oceania",
   "Nauru": "Oceania",
   "Marshall Islands": "Oceania",
+  "OtherOceania": { region: "Oceania", emissions: 7.366800 },
+  
   "Chile": "South America",
   "Argentina": "South America",
   "Suriname": "South America",
   "Venezuela": "South America",
-  "Guyana": "South America"
+  "Guyana": "South America",
+  "OtherSouthAmerica": { region: "South America", emissions: 13.194629 }
 };
 
 // Carica i dati dal file CSV
@@ -39,26 +50,30 @@ d3.csv("data/co-emissions-per-capita.csv").then(data => {
     country: d.Entity,
     emissions: +d["Annual CO₂ emissions (per capita)"],
     region: regionMap[d.Entity]
-  })).filter(d => d.region); // Rimuove i paesi senza regione
+  })).filter(d => d.region && !d.region.emissions); // Rimuove i paesi senza regione e "Other"
+
+  // Gruppo di dati "Other" basato sui valori predefiniti
+  const otherData = Object.values(regionMap).filter(d => d.emissions).map(d => ({
+    country: "Other",
+    emissions: d.emissions,
+    region: d.region
+  }));
+
+  // Combina i dati filtrati con i dati "Other"
+  const combinedData = [...data2018, ...otherData];
 
   // Raggruppa i dati per regione
-  const regionData = d3.groups(data2018, d => d.region).map(([region, countries]) => {
+  const regionData = d3.groups(combinedData, d => d.region).map(([region, countries]) => {
     // Ordina i paesi per emissioni discendenti e seleziona i primi 5
     countries.sort((a, b) => b.emissions - a.emissions);
     const top5 = countries.slice(0, 5);
 
-    // Somma le emissioni dei paesi restanti per la categoria "Other"
-    const otherTotal = d3.sum(countries.slice(5), d => d.emissions);
-
     return {
       region: region,
-      emissions: [
-        ...top5.map(d => ({
-          country: d.country,
-          emissions: d.emissions
-        })),
-        { country: "Other", emissions: otherTotal }
-      ]
+      emissions: top5.map(d => ({
+        country: d.country,
+        emissions: d.emissions
+      }))
     };
   });
 
@@ -87,7 +102,7 @@ d3.csv("data/co-emissions-per-capita.csv").then(data => {
 
   // Scala dei colori per i paesi
   const colorScale = d3.scaleOrdinal()
-    .domain(data2018.map(d => d.country))
+    .domain(combinedData.map(d => d.country))
     .range(d3.schemeTableau10.concat(["#FF5733", "#C70039", "#900C3F", "#581845", "#FFC300"]));
 
   // Prepara i dati per il grafico
