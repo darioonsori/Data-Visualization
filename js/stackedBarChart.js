@@ -68,7 +68,7 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     countries.sort((a, b) => b.emissions - a.emissions);
     const top5 = countries.slice(0, 5);
 
-    // Aggiunge "Other" come ultimo elemento
+    // Verifica se esiste "Other" nella lista e lo posiziona alla fine
     const other = countries.find(d => d.country === "Other");
     if (other) top5.push(other);
 
