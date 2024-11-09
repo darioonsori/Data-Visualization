@@ -1,3 +1,13 @@
+// Define the "Other" values manually
+const otherValues = {
+  "Africa": 31.802244,
+  "Asia": 179.133522,
+  "Europe": 236.507179,
+  "North America": 42.077580,
+  "Oceania": 7.366800,
+  "South America": 13.194629
+};
+
 // Load data from the CSV file
 d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => {
   // Filter data for the year 2018 and map each country to its region using regionMap
@@ -13,9 +23,8 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     countries.sort((a, b) => b.emissions - a.emissions);
     const top5 = countries.slice(0, 5);
 
-    // Calculate the emissions for the "Other" category and add it as the last item
-    const otherEmissions = d3.sum(countries.slice(5), d => d.emissions);
-    top5.push({ country: "Other", emissions: otherEmissions });
+    // Manually insert the "Other" category with predefined values as the last item
+    top5.push({ country: "Other", emissions: otherValues[region] });
 
     // Calculate total emissions for the region
     const totalEmissions = d3.sum(top5, d => d.emissions);
