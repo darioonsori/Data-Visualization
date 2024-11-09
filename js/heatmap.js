@@ -1,28 +1,35 @@
 // Load data from the CSV file and create the heatmap
 d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
-    const fossilColumn = "Annual CO₂ emissions";  // Fossil fuel emissions
-    const landUseColumn = "Annual CO₂ emissions from land-use change";  // Land-use emissions
+    const fossilColumn = "Annual CO₂ emissions";
+    const landUseColumn = "Annual CO₂ emissions from land-use change";
 
-    // Prepare data for the year 2018
-    const data2018 = data.filter(d => d.Year === "2018").map(d => ({
+    // Specific list of aggregated entries to exclude
+    const excludedAggregates = [
+        "World", "Non-OECD (GCP)", "Asia", "Upper-middle-income countries", 
+        "Asia (GCP)", "High-income countries", "OECD (GCP)", 
+        "Asia (excl. China and India)", "North America"
+    ];
+
+    // Filter data for the year 2018 and exclude aggregated entries
+    const data2018 = data.filter(d => d.Year === "2018" && !excludedAggregates.includes(d.Entity)).map(d => ({
         country: d.Entity,
         fossil: +d[fossilColumn],
         landUse: +d[landUseColumn],
         totalEmissions: +d[fossilColumn] + +d[landUseColumn]
     }));
 
-    // Sort by total emissions and keep only the top 10 countries
+    // Sort and keep only the top 10 countries by total emissions
     const top10Data2018 = data2018.sort((a, b) => b.totalEmissions - a.totalEmissions).slice(0, 10);
     const heatmapData2018 = top10Data2018.flatMap(d => [
         { country: d.country, type: "Fossil", emissions: d.fossil },
         { country: d.country, type: "Land-Use", emissions: d.landUse }
     ]);
 
-    // Prepare data for the decade average (2010-2020)
-    const decadeData = data.filter(d => d.Year >= "2010" && d.Year <= "2020");
-    const countryEmissionsDecade = [...new Set(decadeData.map(d => d.Entity))].map(country => {
-        const fossilAvg = d3.mean(decadeData.filter(d => d.Entity === country), d => +d[fossilColumn]);
-        const landUseAvg = d3.mean(decadeData.filter(d => d.Entity === country), d => +d[landUseColumn]);
+    // Prepare data for the decade average (2010-2020) with exclusion
+    const decadeData = data.filter(d => d.Year >= "2010" && d.Year <= "2020" && !excludedAggregates.includes(d.Entity));
+    const countryEmissionsDecade = d3.groups(decadeData, d => d.Entity).map(([country, records]) => {
+        const fossilAvg = d3.mean(records, d => +d[fossilColumn]);
+        const landUseAvg = d3.mean(records, d => +d[landUseColumn]);
         return {
             country: country,
             fossil: fossilAvg,
@@ -31,7 +38,7 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data =
         };
     });
 
-    // Sort by total emissions and keep only the top 10 countries
+    // Sort and keep only the top 10 countries for the decade
     const top10DataDecade = countryEmissionsDecade.sort((a, b) => b.totalEmissions - a.totalEmissions).slice(0, 10);
     const heatmapDataDecade = top10DataDecade.flatMap(d => [
         { country: d.country, type: "Fossil", emissions: d.fossil },
@@ -44,10 +51,8 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data =
         const width = 600 - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
 
-        // Clear previous content
         d3.select("#heatmap-chart").selectAll("*").remove();
 
-        // Create an SVG container for the heatmap
         const svg = d3.select("#heatmap-chart")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
