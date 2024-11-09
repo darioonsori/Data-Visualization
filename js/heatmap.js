@@ -1,11 +1,13 @@
-// List of regions or aggregate groups to exclude from the heatmap
-const excludedRegions = [
-    "World", "Non-OECD (GCP)", "Asia", "Upper-middle-income countries", 
-    "Asia (GCP)", "High-income countries", "OECD (GCP)", 
-    "Asia (excl. China and India)", "North America", "North America (GCP)", 
-    "Lower-middle-income countries", "Europe", "Europe (GCP)", "European Union (28)", 
-    "Europe (excl. EU-27)", "European Union (27)"
+// List of specific keywords to exclude aggregate regions and economic groups
+const excludedKeywords = [
+    "World", "GCP", "income", "region", "Europe", "Asia", "America", "Union", 
+    "OECD", "Middle East", "Africa", "South America", "North America", "excl"
 ];
+
+// Function to check if an entity name contains any excluded keyword
+function isAggregateRegion(entity) {
+    return excludedKeywords.some(keyword => entity.includes(keyword));
+}
 
 // Load data from the CSV file and create the heatmap
 d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
@@ -13,7 +15,7 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data =
     const landUseColumn = "Annual CO₂ emissions from land-use change";
 
     // Filter and prepare data for the year 2018
-    const data2018 = data.filter(d => d.Year === "2018" && !excludedRegions.includes(d.Entity)).map(d => ({
+    const data2018 = data.filter(d => d.Year === "2018" && !isAggregateRegion(d.Entity)).map(d => ({
         country: d.Entity,
         fossil: +d[fossilColumn],
         landUse: +d[landUseColumn],
@@ -28,7 +30,7 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data =
     ]);
 
     // Prepare data for the decade average (2010-2020) with filtering
-    const decadeData = data.filter(d => d.Year >= "2010" && d.Year <= "2020" && !excludedRegions.includes(d.Entity));
+    const decadeData = data.filter(d => d.Year >= "2010" && d.Year <= "2020" && !isAggregateRegion(d.Entity));
     const countryEmissionsDecade = d3.groups(decadeData, d => d.Entity).map(([country, values]) => {
         const fossilAvg = d3.mean(values, d => +d[fossilColumn]);
         const landUseAvg = d3.mean(values, d => +d[landUseColumn]);
