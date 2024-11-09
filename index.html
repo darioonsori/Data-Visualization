@@ -1,681 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Environmental Data Visualizations</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <style>
-        .tooltip {
-            position: absolute;
-            background-color: white;
-            border: 1px solid black;
-            border-radius: 5px;
-            padding: 5px;
-            visibility: hidden;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Environmental Data Visualizations</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .tooltip {
+      position: absolute;
+      background-color: white;
+      border: 1px solid black;
+      border-radius: 5px;
+      padding: 5px;
+      visibility: hidden;
+    }
+  </style>
 </head>
-<>
-    <h1>Global Environmental Data Visualizations</h1>
-    <h2>Assignment 1 - Dario Onsori</h2>
 
-    <!-- Data at a Glance Section -->
-    <section id="data-at-glance">
-        <h3>Data at a Glance</h3>
-        <p>This section presents a quick comparison of CO2 emissions for the year 2018 and the average decade 2010-2020.</p>
+<body>
+  <h1>Global Environmental Data Visualizations</h1>
+  <h2>Assignment 1 - Dario Onsori</h2>
 
-        <!-- Selector for choosing between year and decade -->
-        <label for="time-period">Select Time Period:</label>
-        <select id="time-period">
-            <option value="2018">Year: 2018</option>
-            <option value="decade">Decade: 2010-2020 (Average)</option>
-        </select>
+  <!-- Data at a Glance Section -->
+  <section id="data-at-glance">
+    <h3>Data at a Glance</h3>
+    <p>This section presents a quick comparison of CO2 emissions for the year 2018 and the average decade 2010-2020.</p>
 
-        <div id="bar-chart"></div>
-        <div style="margin-top: 10px;">
-            <button onclick="sortBars()">Sort by Emissions</button>
-        </div>
-    </section>
+    <!-- Selector for choosing between year and decade -->
+    <label for="time-period">Select Time Period:</label>
+    <select id="time-period">
+      <option value="2018">Year: 2018</option>
+      <option value="decade">Decade: 2010-2020 (Average)</option>
+    </select>
 
-    <!-- Country Comparison Section -->
-    <section id="country-comparison">
-      <h3>Country Comparison</h3>
-      <p>This section compares CO2 emissions per capita for the year 2018 across different regions, highlighting the top 5 countries and an aggregated "Other" category for each region.</p>
-        
-      <div id="stacked-bar-chart"></div>
-    </section>
+    <div id="bar-chart"></div>
+    <!-- Button to toggle sorting -->
+    <div style="margin-top: 10px;">
+      <button onclick="sortBars()">Sort by Emissions</button>
+    </div>
+  </section>
 
-    <!-- Country Comparison - Small Multiple Section -->
-    <section id="country-comparison-multiple">
-      <h3>Country Comparison - Small Multiple</h3>
-      <p>This section displays the CO2 emissions per capita for the year 2018 for each region using a "small multiple" stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other" category.</p>
+  <!-- Country Comparison Section -->
+  <section id="country-comparison">
+    <h3>Country Comparison</h3>
+    <p>This section compares CO2 emissions per capita for the year 2018 across different regions, highlighting the top 5
+      countries and an aggregated "Other" category for each region.</p>
 
-      <!-- Container for the small multiple stacked bar charts -->
-      <div id="small-multiples"></div>
+    <div id="stacked-bar-chart"></div>
+  </section>
+
+  <!-- Country Comparison - Small Multiple Section -->
+  <section id="country-comparison-multiple">
+    <h3>Country Comparison - Small Multiple</h3>
+    <p>This section displays the CO2 emissions per capita for the year 2018 for each region using a "small multiple"
+      stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other" category.
+    </p>
+
+    <!-- Container for the small multiple stacked bar charts -->
+    <div id="small-multiples"></div>
 
     <div class="tooltip" id="tooltip"></div>
-    </section>
-    
-    <!-- Country Comparison - Stacked Bar Chart 100% Section -->
-    <section id="country-comparison-100">
-        <h3>Country Comparison - Stacked Bar Chart 100%</h3>
-        <p>This section shows the CO2 emissions per capita for each region as a 100% stacked bar chart, displaying the relative proportions of emissions from the top-5 countries and the "Other" category.</p>
+  </section>
 
-        <!-- Container for the 100% stacked bar chart -->
-        <div id="stacked-bar-100-chart"></div>
-    </section>
-    
-    <!-- Country Comparison - CO₂ Emissions by Type (Heatmap) -->
-    <section id="country-comparison-heatmap">
-        <h3>Country Comparison - CO₂ Emissions by Type (Heatmap)</h3>
-        <p>This heatmap shows the CO₂ emissions from fossil fuels and land-use for the top-10 emitting countries in the selected year or decade.</p>
-        
-        <!-- Selector for choosing between year and decade -->
-        <label for="heatmap-time-period">Select Time Period:</label>
-        <select id="heatmap-time-period">
-            <option value="2018">Year: 2018</option>
-            <option value="decade">Decade: 2010-2020 (Average)</option>
-        </select>
-    
-        <!-- Container for the heatmap chart -->
-        <div id="heatmap-chart"></div>
-        
-        <!-- Tooltip for displaying emissions information on hover -->
-        <div class="tooltip" id="tooltip" style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 3px;"></div>
-    </section>
+  <!-- Country Comparison - Stacked Bar Chart 100% Section -->
+  <section id="country-comparison-100">
+    <h3>Country Comparison - Stacked Bar Chart 100%</h3>
+    <p>This section shows the CO2 emissions per capita for each region as a 100% stacked bar chart, displaying the
+      relative proportions of emissions from the top-5 countries and the "Other" category.</p>
 
-    <!-- Script for the bar chart for Data at a Glance -->
-    <script>
-        const data2018 = [
-            { country: "China", emissions: 7.3 },
-            { country: "Germany", emissions: 9.1 },
-            { country: "Italy", emissions: 5.8 },
-            { country: "Russia", emissions: 11.8 },
-            { country: "USA", emissions: 16.2 }
-        ];
+    <!-- Container for the 100% stacked bar chart -->
+    <div id="stacked-bar-100-chart"></div>
+  </section>
 
-        const dataDecade = [
-            { country: "China", emissions: 7.15 },
-            { country: "Germany", emissions: 9.49 },
-            { country: "Italy", emissions: 6.14 },
-            { country: "Russia", emissions: 11.50 },
-            { country: "USA", emissions: 16.50 }
-        ];
+  <!-- Country Comparison - CO₂ Emissions by Type (Heatmap) -->
+  <section id="country-comparison-heatmap">
+    <h3>Country Comparison - CO₂ Emissions by Type (Heatmap)</h3>
+    <p>This heatmap shows the CO₂ emissions from fossil fuels and land-use for the top-10 emitting countries in the
+      selected year or decade.</p>
 
-        let sortByEmissions = false;
+    <!-- Selector for choosing between year and decade -->
+    <label for="heatmap-time-period">Select Time Period:</label>
+    <select id="heatmap-time-period">
+      <option value="2018">Year: 2018</option>
+      <option value="decade">Decade: 2010-2020 (Average)</option>
+    </select>
 
-        const tooltip = d3.select("#tooltip");
+    <!-- Container for the heatmap chart -->
+    <div id="heatmap-chart"></div>
 
-        function createBarChart(data) {
-            d3.select("#bar-chart").selectAll("*").remove();
+    <!-- Tooltip for displaying emissions information on hover -->
+    <div class="tooltip" id="tooltip"
+      style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 3px;">
+    </div>
+  </section>
 
-            const width = 500;
-            const height = 300;
-            const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+  <!-- Link to JavaScript files for each section -->
 
-            const svg = d3.select("#bar-chart")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  <!-- Script for the bar chart for Data at a Glance -->
+  <script src="js/barChart.js"></script>
 
-            const x = d3.scaleBand()
-                .domain(data.map(d => d.country))
-                .range([0, width - margin.left - margin.right])
-                .padding(0.1);
+  <!-- Script for horizontal stacked bar chart in Country Comparison -->
+  <script src="js/stackedBarChart.js"></script>
 
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.emissions)])
-                .range([height - margin.top - margin.bottom, 0]);
+  <!-- Script for horizontal stacked bar chart in Country Comparison - Small Multiple -->
+  <script src="js/smallMultiple.js"></script>
 
-            svg.selectAll(".bar")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", d => x(d.country))
-                .attr("y", d => y(d.emissions))
-                .attr("width", x.bandwidth())
-                .attr("height", d => height - margin.top - margin.bottom - y(d.emissions))
-                .attr("fill", "steelblue")
-                .on("mouseover", function(event, d) {
-                    tooltip.style("visibility", "visible")
-                           .text(`Emissions: ${d.emissions}t`);
-                })
-                .on("mousemove", function(event) {
-                    tooltip.style("top", `${event.pageY - 10}px`)
-                           .style("left", `${event.pageX + 10}px`);
-                })
-                .on("mouseout", function() {
-                    tooltip.style("visibility", "hidden");
-                });
+  <!-- Script for horizontal Stacked bar chart 100% -->
+  <script src="js/stackedBar100.js"></script>
 
-            svg.append("g")
-                .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
-                .call(d3.axisBottom(x));
-            svg.append("g")
-                .call(d3.axisLeft(y));
-        }
-
-        function sortBars() {
-            sortByEmissions = !sortByEmissions;
-            let selectedData = document.getElementById("time-period").value === "2018" ? [...data2018] : [...dataDecade];
-
-            if (sortByEmissions) {
-                selectedData.sort((a, b) => b.emissions - a.emissions);
-            }
-            createBarChart(selectedData);
-        }
-
-        createBarChart(data2018);
-
-        d3.select("#time-period").on("change", function() {
-            const selectedTime = this.value;
-            const selectedData = selectedTime === "2018" ? data2018 : dataDecade;
-            createBarChart(selectedData);
-        });
-    </script>
-
-    <!-- Script for horizontal stacked bar chart in Country Comparison -->
-    <script>
-        const stackedData = [
-            { Region: "Africa", Country: "Libya", Emissions: 8.339181 },
-            { Region: "Africa", Country: "South Africa", Emissions: 7.590512 },
-            { Region: "Africa", Country: "Seychelles", Emissions: 5.827153 },
-            { Region: "Africa", Country: "Algeria", Emissions: 4.085100 },
-            { Region: "Africa", Country: "Equatorial Guinea", Emissions: 4.000027 },
-            { Region: "Africa", Country: "Other", Emissions: 31.802244 },
-            { Region: "Asia", Country: "Qatar", Emissions: 34.504090 },
-            { Region: "Asia", Country: "Kuwait", Emissions: 24.448280 },
-            { Region: "Asia", Country: "United Arab Emirates", Emissions: 22.896563 },
-            { Region: "Asia", Country: "Bahrain", Emissions: 21.943077 },
-            { Region: "Asia", Country: "Brunei", Emissions: 21.516985 },
-            { Region: "Asia", Country: "Other", Emissions: 179.133522 },
-            { Region: "Europe", Country: "Kazakhstan", Emissions: 16.569881 },
-            { Region: "Europe", Country: "Luxembourg", Emissions: 15.748627 },
-            { Region: "Europe", Country: "Estonia", Emissions: 13.527124 },
-            { Region: "Europe", Country: "Russia", Emissions: 11.757415 },
-            { Region: "Europe", Country: "Iceland", Emissions: 10.395095 },
-            { Region: "Europe", Country: "Other", Emissions: 236.507179 },
-            { Region: "North America", Country: "Trinidad and Tobago", Emissions: 26.801151 },
-            { Region: "North America", Country: "United States", Emissions: 16.191355 },
-            { Region: "North America", Country: "Canada", Emissions: 15.581538 },
-            { Region: "North America", Country: "Antigua and Barbuda", Emissions: 6.716774 },
-            { Region: "North America", Country: "Bahamas", Emissions: 6.025971 },
-            { Region: "North America", Country: "Other", Emissions: 42.077580 },
-            { Region: "Oceania", Country: "Australia", Emissions: 16.627844 },
-            { Region: "Oceania", Country: "Palau", Emissions: 11.880807 },
-            { Region: "Oceania", Country: "New Zealand", Emissions: 7.379144 },
-            { Region: "Oceania", Country: "Nauru", Emissions: 4.599548 },
-            { Region: "Oceania", Country: "Marshall Islands", Emissions: 3.185256 },
-            { Region: "Oceania", Country: "Other", Emissions: 7.366800 },
-            { Region: "South America", Country: "Chile", Emissions: 4.515097 },
-            { Region: "South America", Country: "Argentina", Emissions: 4.066307 },
-            { Region: "South America", Country: "Suriname", Emissions: 3.518976 },
-            { Region: "South America", Country: "Venezuela", Emissions: 3.377444 },
-            { Region: "South America", Country: "Guyana", Emissions: 3.186389 },
-            { Region: "South America", Country: "Other", Emissions: 13.194629 }
-        ];
-
-        const margin = { top: 20, right: 30, bottom: 40, left: 100 };
-        const width = 800 - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
-
-        const svg = d3.select("#stacked-bar-chart")
-            .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
-        const xScale = d3.scaleLinear()
-            .domain([0, d3.max(stackedData, d => d.Emissions)])
-            .range([0, width]);
-
-        const yScale = d3.scaleBand()
-            .domain(stackedData.map(d => d.Region))
-            .range([0, height])
-            .padding(0.2);
-
-        const colorScale = d3.scaleOrdinal()
-            .domain(stackedData.map(d => d.Country))
-            .range(d3.schemeTableau10.concat(["#FF5733", "#C70039", "#900C3F", "#581845", "#FFC300"]));
-
-        const regions = d3.group(stackedData, d => d.Region);
-        let processedData = [];
-        regions.forEach((values, key) => {
-            let total = 0;
-            values.forEach(d => {
-                processedData.push({ region: key, country: d.Country, emissions: d.Emissions, start: total });
-                total += d.Emissions;
-            });
-        });
-
-        svg.selectAll(".bar")
-            .data(processedData)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("y", d => yScale(d.region))
-            .attr("x", d => xScale(d.start))
-            .attr("height", yScale.bandwidth())
-            .attr("width", d => xScale(d.emissions))
-            .attr("fill", d => colorScale(d.country))
-            .on("mouseover", function(event, d) {
-                d3.select("#tooltip")
-                    .style("visibility", "visible")
-                    .text(`${d.country}: ${d.emissions.toFixed(2)} t`);
-            })
-            .on("mousemove", function(event) {
-                d3.select("#tooltip")
-                    .style("top", `${event.pageY - 10}px`)
-                    .style("left", `${event.pageX + 10}px`);
-            })
-            .on("mouseout", function() {
-                d3.select("#tooltip").style("visibility", "hidden");
-            });
-
-        svg.append("g")
-            .call(d3.axisLeft(yScale).tickSizeOuter(0))
-            .selectAll("text")
-            .style("font-size", "14px");
-
-        svg.append("g")
-            .attr("transform", `translate(0, ${height})`)
-            .call(d3.axisBottom(xScale).ticks(5));
-    </script>
-    
-    <!-- Script for horizontal stacked bar chart in Country Comparison - Small Multiple -->
-    <script>
-        const stackedDataMultiple = {
-            "Africa": [
-                { country: "Libya", emissions: 8.339181 },
-                { country: "South Africa", emissions: 7.590512 },
-                { country: "Seychelles", emissions: 5.827153 },
-                { country: "Algeria", emissions: 4.085100 },
-                { country: "Equatorial Guinea", emissions: 4.000027 },
-                { country: "Other", emissions: 31.802244 }
-            ],
-            "Asia": [
-                { country: "Qatar", emissions: 34.504090 },
-                { country: "Kuwait", emissions: 24.448280 },
-                { country: "United Arab Emirates", emissions: 22.896563 },
-                { country: "Bahrain", emissions: 21.943077 },
-                { country: "Brunei", emissions: 21.516985 },
-                { country: "Other", emissions: 179.133522 }
-            ],
-            "Europe": [
-                { country: "Kazakhstan", emissions: 16.569881 },
-                { country: "Luxembourg", emissions: 15.748627 },
-                { country: "Estonia", emissions: 13.527124 },
-                { country: "Russia", emissions: 11.757415 },
-                { country: "Iceland", emissions: 10.395095 },
-                { country: "Other", emissions: 236.507179 }
-            ],
-            "North America": [
-                { country: "Trinidad and Tobago", emissions: 26.801151 },
-                { country: "United States", emissions: 16.191355 },
-                { country: "Canada", emissions: 15.581538 },
-                { country: "Antigua and Barbuda", emissions: 6.716774 },
-                { country: "Bahamas", emissions: 6.025971 },
-                { country: "Other", emissions: 42.077580 }
-            ],
-            "Oceania": [
-                { country: "Australia", emissions: 16.627844 },
-                { country: "Palau", emissions: 11.880807 },
-                { country: "New Zealand", emissions: 7.379144 },
-                { country: "Nauru", emissions: 4.599548 },
-                { country: "Marshall Islands", emissions: 3.185256 },
-                { country: "Other", emissions: 7.366800 }
-            ],
-            "South America": [
-                { country: "Chile", emissions: 4.515097 },
-                { country: "Argentina", emissions: 4.066307 },
-                { country: "Suriname", emissions: 3.518976 },
-                { country: "Venezuela", emissions: 3.377444 },
-                { country: "Guyana", emissions: 3.186389 },
-                { country: "Other", emissions: 13.194629 }
-            ]
-        };
-
-
-      const marginMultiple = { top: 20, right: 20, bottom: 30, left: 60 };
-      const widthMultiple = 300 - marginMultiple.left - marginMultiple.right;
-      const heightMultiple = 200 - marginMultiple.top - marginMultiple.bottom;
-
-      const colorScaleMultiple = d3.scaleOrdinal(d3.schemeTableau10);
-
-      const svgContainerMultiple = d3.select("#small-multiples")
-          .selectAll("svg")
-          .data(Object.keys(stackedDataMultiple))
-          .enter()
-          .append("svg")
-          .attr("width", widthMultiple + marginMultiple.left + marginMultiple.right)
-          .attr("height", heightMultiple + marginMultiple.top + marginMultiple.bottom)
-          .append("g")
-          .attr("transform", `translate(${marginMultiple.left},${marginMultiple.top})`);
-
-      svgContainerMultiple.each(function(region) {
-          const svg = d3.select(this);
-          const data = stackedDataMultiple[region];
-
-          let cumulative = 0;
-          data.forEach(d => {
-              d.start = cumulative;
-              cumulative += d.emissions;
-          });
-
-          const xScaleMultiple = d3.scaleLinear()
-              .domain([0, cumulative])
-              .range([0, widthMultiple]);
-
-          const yScaleMultiple = d3.scaleBand()
-              .domain([region])
-              .range([0, heightMultiple / 2]);
-
-          svg.append("text")
-              .attr("class", "chart-title")
-              .attr("x", widthMultiple / 2)
-              .attr("y", -5)
-              .attr("text-anchor", "middle")
-              .text(region);
-
-          svg.selectAll("rect")
-              .data(data)
-              .enter()
-              .append("rect")
-              .attr("x", d => xScaleMultiple(d.start))
-              .attr("y", yScaleMultiple(region))
-              .attr("width", d => xScaleMultiple(d.emissions))
-              .attr("height", yScaleMultiple.bandwidth() - 20)
-              .attr("fill", d => colorScaleMultiple(d.country))
-              .on("mouseover", function(event, d) {
-                  d3.select("#tooltip")
-                      .style("visibility", "visible")
-                      .text(`${d.country}: ${d.emissions.toFixed(2)} t`);
-              })
-              .on("mousemove", function(event) {
-                  d3.select("#tooltip")
-                      .style("top", `${event.pageY - 10}px`)
-                      .style("left", `${event.pageX + 10}px`);
-              })
-              .on("mouseout", function() {
-                  d3.select("#tooltip").style("visibility", "hidden");
-              });
-
-          svg.append("g")
-              .attr("transform", `translate(0,${heightMultiple / 2})`)
-              .call(d3.axisBottom(xScaleMultiple).ticks(5));
-      });
-    </script>
-
-    <!-- Script for horizontal Stacked bar chart 100% -->
-    <script>
-    // Data for the 100% Stacked Bar Chart
-        const stackedDataPercent = {
-            "Africa": [
-                { country: "Libya", emissions: 8.339181 },
-                { country: "South Africa", emissions: 7.590512 },
-                { country: "Seychelles", emissions: 5.827153 },
-                { country: "Algeria", emissions: 4.085100 },
-                { country: "Equatorial Guinea", emissions: 4.000027 },
-                { country: "Other", emissions: 31.802244 }
-            ],
-            "Asia": [
-                { country: "Qatar", emissions: 34.504090 },
-                { country: "Kuwait", emissions: 24.448280 },
-                { country: "United Arab Emirates", emissions: 22.896563 },
-                { country: "Bahrain", emissions: 21.943077 },
-                { country: "Brunei", emissions: 21.516985 },
-                { country: "Other", emissions: 179.133522 }
-            ],
-            "Europe": [
-                { country: "Kazakhstan", emissions: 16.569881 },
-                { country: "Luxembourg", emissions: 15.748627 },
-                { country: "Estonia", emissions: 13.527124 },
-                { country: "Russia", emissions: 11.757415 },
-                { country: "Iceland", emissions: 10.395095 },
-                { country: "Other", emissions: 236.507179 }
-            ],
-            "North America": [
-                { country: "Trinidad and Tobago", emissions: 26.801151 },
-                { country: "United States", emissions: 16.191355 },
-                { country: "Canada", emissions: 15.581538 },
-                { country: "Antigua and Barbuda", emissions: 6.716774 },
-                { country: "Bahamas", emissions: 6.025971 },
-                { country: "Other", emissions: 42.077580 }
-            ],
-            "Oceania": [
-                { country: "Australia", emissions: 16.627844 },
-                { country: "Palau", emissions: 11.880807 },
-                { country: "New Zealand", emissions: 7.379144 },
-                { country: "Nauru", emissions: 4.599548 },
-                { country: "Marshall Islands", emissions: 3.185256 },
-                { country: "Other", emissions: 7.366800 }
-            ],
-            "South America": [
-                { country: "Chile", emissions: 4.515097 },
-                { country: "Argentina", emissions: 4.066307 },
-                { country: "Suriname", emissions: 3.518976 },
-                { country: "Venezuela", emissions: 3.377444 },
-                { country: "Guyana", emissions: 3.186389 },
-                { country: "Other", emissions: 13.194629 }
-            ]
-        };
-
-        const margin100 = { top: 20, right: 30, bottom: 40, left: 60 };
-        const width100 = 800 - margin100.left - margin100.right;
-        const height100 = 400 - margin100.top - margin100.bottom;
-    
-        const colorScale100 = d3.scaleOrdinal(d3.schemeTableau10);
-    
-        const svg100 = d3.select("#stacked-bar-100-chart")
-            .append("svg")
-            .attr("width", width100 + margin100.left + margin100.right)
-            .attr("height", height100 + margin100.top + margin100.bottom)
-            .append("g")
-            .attr("transform", `translate(${margin100.left}, ${margin100.top})`);
-    
-        // Process data for 100% stacked bar chart
-        const processedData100 = [];
-        for (const region in stackedDataPercent) {
-            const regionData = stackedDataPercent[region];
-            const totalEmissions = d3.sum(regionData, d => d.emissions);
-    
-            // Calculate relative percentage for each country
-            let cumulativePercent = 0;
-            regionData.forEach(d => {
-                const percent = (d.emissions / totalEmissions) * 100;
-                processedData100.push({
-                    region: region,
-                    country: d.country,
-                    emissions: percent,
-                    start: cumulativePercent
-                });
-                cumulativePercent += percent;
-            });
-        }
-    
-        // X and Y scales
-        const xScale100 = d3.scaleLinear()
-            .domain([0, 100])
-            .range([0, width100]);
-    
-        const yScale100 = d3.scaleBand()
-            .domain(Object.keys(stackedDataPercent))
-            .range([0, height100])
-            .padding(0.2);
-    
-        // Draw bars
-        svg100.selectAll(".bar")
-            .data(processedData100)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("y", d => yScale100(d.region))
-            .attr("x", d => xScale100(d.start))
-            .attr("height", yScale100.bandwidth())
-            .attr("width", d => xScale100(d.emissions))
-            .attr("fill", d => colorScale100(d.country))
-            .on("mouseover", function(event, d) {
-                d3.select("#tooltip")
-                    .style("visibility", "visible")
-                    .text(`${d.country}: ${d.emissions.toFixed(2)}%`);
-            })
-            .on("mousemove", function(event) {
-                d3.select("#tooltip")
-                    .style("top", `${event.pageY - 10}px`)
-                    .style("left", `${event.pageX + 10}px`);
-            })
-            .on("mouseout", function() {
-                d3.select("#tooltip").style("visibility", "hidden");
-            });
-    
-        // Y-axis (regions)
-        svg100.append("g")
-            .call(d3.axisLeft(yScale100).tickSizeOuter(0))
-            .selectAll("text")
-            .style("font-size", "14px");
-    
-        // X-axis (percentage)
-        svg100.append("g")
-            .attr("transform", `translate(0, ${height100})`)
-            .call(d3.axisBottom(xScale100).ticks(5).tickFormat(d => d + "%"));
-
-    </script>
-    
-    <!-- Script for the heatmap -->
-    <script>
-        // Heatmap data for the year 2018
-        const heatmapData2018 = [
-            { country: "China", type: "Fossil", emissions: 10353934000.0 },
-            { country: "China", type: "Land-Use", emissions: 696513540.0 },
-            { country: "United States", type: "Fossil", emissions: 5377797000.0 },
-            { country: "United States", type: "Land-Use", emissions: 108297544.0 },
-            { country: "India", type: "Fossil", emissions: 2593057800.0 },
-            { country: "India", type: "Land-Use", emissions: 125022424.0 },
-            { country: "Russia", type: "Fossil", emissions: 1712494300.0 },
-            { country: "Russia", type: "Land-Use", emissions: 445643970.0 },
-            { country: "Brazil", type: "Fossil", emissions: 477998620.0 },
-            { country: "Brazil", type: "Land-Use", emissions: 900642900.0 },
-            { country: "Japan", type: "Fossil", emissions: 1141668900.0 },
-            { country: "Japan", type: "Land-Use", emissions: -823190.9 },
-            { country: "Indonesia", type: "Fossil", emissions: 594101400.0 },
-            { country: "Indonesia", type: "Land-Use", emissions: 520235680.0 },
-            { country: "Mexico", type: "Fossil", emissions: 470285860.0 },
-            { country: "Mexico", type: "Land-Use", emissions: 281983170.0 },
-            { country: "Germany", type: "Fossil", emissions: 754811140.0 },
-            { country: "Germany", type: "Land-Use", emissions: -9062024.0 },
-            { country: "Canada", type: "Fossil", emissions: 577066300.0 },
-            { country: "Canada", type: "Land-Use", emissions: 136751070.0 }
-        ];
-    
-        // Heatmap data for the decade 2010-2020
-        const heatmapDataDecade = [
-            { country: "China", type: "Fossil", emissions: 9956323727.27 },
-            { country: "China", type: "Land-Use", emissions: 358749581.73 },
-            { country: "United States", type: "Fossil", emissions: 5343172000.0 },
-            { country: "United States", type: "Land-Use", emissions: 50813028.64 },
-            { country: "India", type: "Fossil", emissions: 2195833936.36 },
-            { country: "India", type: "Land-Use", emissions: 129644838.73 },
-            { country: "Russia", type: "Fossil", emissions: 1662772154.55 },
-            { country: "Russia", type: "Land-Use", emissions: 306841387.27 },
-            { country: "Brazil", type: "Fossil", emissions: 491515161.82 },
-            { country: "Brazil", type: "Land-Use", emissions: 1123695109.09 },
-            { country: "Indonesia", type: "Fossil", emissions: 538781890.91 },
-            { country: "Indonesia", type: "Land-Use", emissions: 795085860.91 },
-            { country: "Japan", type: "Fossil", emissions: 1205719636.36 },
-            { country: "Japan", type: "Land-Use", emissions: -4164145.89 },
-            { country: "Germany", type: "Fossil", emissions: 779588362.73 },
-            { country: "Germany", type: "Land-Use", emissions: -8565685.86 },
-            { country: "Republic of Congo", type: "Fossil", emissions: 3380181.73 },
-            { country: "Republic of Congo", type: "Land-Use", emissions: 720959701.82 },
-            { country: "Canada", type: "Fossil", emissions: 563319258.18 },
-            { country: "Canada", type: "Land-Use", emissions: 126558616.91 }
-        ];
-    
-        // Function to create the heatmap with adjusted margins
-        function createHeatmap(data) {
-            // Adjusted margin values to give more space around the chart
-            const margin = { top: 30, right: 60, bottom: 60, left: 120 };
-            const width = 600 - margin.left - margin.right;
-            const height = 400 - margin.top - margin.bottom;
-    
-            // Clear previous chart content
-            d3.select("#heatmap-chart").selectAll("*").remove();
-    
-            // Create an SVG container for the heatmap
-            const svg = d3.select("#heatmap-chart")
-                .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
-    
-            // Scales for x-axis, y-axis, and color scale
-            const x = d3.scaleBand()
-                .domain(["Fossil", "Land-Use"])
-                .range([0, width])
-                .padding(0.05);
-    
-            const y = d3.scaleBand()
-                .domain(data.map(d => d.country).filter((value, index, self) => self.indexOf(value) === index))
-                .range([0, height])
-                .padding(0.05);
-    
-            const colorScale = d3.scaleSequential(d3.interpolateBlues)
-                .domain([0, d3.max(data, d => d.emissions)]);
-    
-            // Create the heatmap cells
-            svg.selectAll()
-                .data(data, d => d.country + ':' + d.type)
-                .enter()
-                .append("rect")
-                .attr("x", d => x(d.type))
-                .attr("y", d => y(d.country))
-                .attr("width", x.bandwidth())
-                .attr("height", y.bandwidth())
-                .style("fill", d => colorScale(d.emissions))
-                .on("mouseover", function(event, d) {
-                    d3.select("#tooltip")
-                        .style("visibility", "visible")
-                        .text(`${d.country} - ${d.type}: ${d.emissions.toFixed(2)} t`);
-                })
-                .on("mousemove", function(event) {
-                    d3.select("#tooltip")
-                        .style("top", `${event.pageY - 10}px`)
-                        .style("left", `${event.pageX + 10}px`);
-                })
-                .on("mouseout", function() {
-                    d3.select("#tooltip").style("visibility", "hidden");
-                });
-    
-            // Add x-axis with labels for "Fossil" and "Land-Use"
-            svg.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x))
-                .selectAll("text")
-                .style("text-anchor", "middle");
-    
-            // Add y-axis with country names
-            svg.append("g")
-                .call(d3.axisLeft(y))
-                .selectAll("text")
-                .style("text-anchor", "end");
-        }
-    
-        // Initialize the heatmap with data for 2018
-        createHeatmap(heatmapData2018);
-    
-        // Update the heatmap when the user changes the selected time period
-        d3.select("#heatmap-time-period").on("change", function() {
-            const selectedTime = this.value;
-            const selectedData = selectedTime === "2018" ? heatmapData2018 : heatmapDataDecade;
-            createHeatmap(selectedData);
-        });
-    </script>
+  <!-- Script for the heatmap -->
+  <script src="js/heatmap.js"></script>
 
 </body>
+
 </html>
