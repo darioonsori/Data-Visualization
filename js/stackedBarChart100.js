@@ -22,7 +22,7 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
 
     // Convert emissions to percentages
     let cumulativePercent = 0;
-    const processed = top5.map(d => {
+    return top5.map(d => {
       const percent = (d.emissions / totalEmissions) * 100;
       const data = {
         region: region,
@@ -33,8 +33,6 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
       cumulativePercent += percent;
       return data;
     });
-
-    return processed;
   }).flat();
 
   // Set up the dimensions and scales
@@ -57,7 +55,7 @@ d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv").then(data => 
     .range([0, width100]);
 
   const yScale100 = d3.scaleBand()
-    .domain([...new Set(processedData100.map(d => d.region))])
+    .domain([...new Set(regionData.map(d => d.region))])
     .range([0, height100])
     .padding(0.2);
 
