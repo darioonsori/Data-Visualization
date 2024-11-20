@@ -1,5 +1,5 @@
 // Load the CSV data
-d3.csv("co2-fossil-plus-land-use.csv").then(function (data) {
+d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(function (data) {
   // Filter data for the target year
   const year = "2018";
   const filteredData = data.filter(d => d.Year === year);
