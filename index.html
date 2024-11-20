@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Global Environmental Data Visualizations</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/d3-sankey.v0.12.min.js"></script>
   <style>
     .tooltip {
       position: absolute;
@@ -14,6 +15,21 @@
       border-radius: 5px;
       padding: 5px;
       visibility: hidden;
+    }
+
+    .node {
+      fill: steelblue;
+      stroke: black;
+      cursor: pointer;
+    }
+
+    .link {
+      fill: none;
+      stroke-opacity: 0.2;
+    }
+
+    .link:hover {
+      stroke-opacity: 0.5;
     }
   </style>
 </head>
@@ -43,11 +59,10 @@
     </div>
   </section>
 
-
   <!-- Country Comparison Section -->
   <section id="country-comparison">
     <h3>Country Comparison</h3>
-    <p>This section compares CO2 emissions per capita for the year 2018 across different regions, highlighting the top 5
+    <p>This section compares CO₂ emissions per capita for the year 2018 across different regions, highlighting the top 5
       countries and an aggregated "Other" category for each region.</p>
 
     <div id="stacked-bar-chart"></div>
@@ -56,7 +71,7 @@
   <!-- Country Comparison - Small Multiple Section -->
   <section id="country-comparison-multiple">
     <h3>Country Comparison - Small Multiple</h3>
-    <p>This section displays the CO2 emissions per capita for the year 2018 for each region using a "small multiple"
+    <p>This section displays the CO₂ emissions per capita for the year 2018 for each region using a "small multiple"
       stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other" category.
     </p>
 
@@ -69,7 +84,7 @@
   <!-- Country Comparison - Stacked Bar Chart 100% Section -->
   <section id="country-comparison-100">
     <h3>Country Comparison - Stacked Bar Chart 100%</h3>
-    <p>This section shows the CO2 emissions per capita for each region as a 100% stacked bar chart, displaying the
+    <p>This section shows the CO₂ emissions per capita for each region as a 100% stacked bar chart, displaying the
       relative proportions of emissions from the top-5 countries and the "Other" category.</p>
 
     <!-- Container for the 100% stacked bar chart -->
@@ -98,24 +113,20 @@
     </div>
   </section>
 
-  <!-- Link to JavaScript files for each section -->
+  <!-- Distributions Section -->
+  <section id="distributions">
+    <h3>Distributions - Alluvial Plot</h3>
+    <p>This section visualizes the distribution of CO₂ emissions by continent, country, and emission type (Fossil vs Land-Use) using an alluvial plot.</p>
+    <div id="alluvial-chart"></div>
+  </section>
 
-  <!-- Script for the bar chart for Data at a Glance -->
+  <!-- Link to JavaScript files -->
   <script src="js/barChart.js"></script>
-
-  <!-- Script for horizontal stacked bar chart in Country Comparison -->
   <script src="js/stackedBarChart.js"></script>
-
-  <!-- Script for horizontal stacked bar chart in Country Comparison - Small Multiple -->
   <script src="js/smallMultiples.js"></script>
-
-  <!-- Script for horizontal Stacked bar chart 100% -->
   <script src="js/stackedBarChart100.js"></script>
-
-  <!-- Script for the heatmap -->
   <script src="js/heatmap.js"></script>
-
-
+  <script src="js/alluvialPlot.js"></script>
 </body>
 
 </html>
