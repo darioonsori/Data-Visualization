@@ -224,12 +224,12 @@ function mapCountryToContinent(country) {
         "(GCP)", "excl.", "aviation", "shipping", "Union", "World", "countries"
     ];
 
-    if (excludedKeywords.some(keyword => entity.includes(keyword))) {
-        console.warn(`Ignored entity: ${entity}`);
+    if (excludedKeywords.some(keyword => country.includes(keyword))) {
+        console.warn(`Ignored entity: ${country}`);
         return null;
     }
 
-    return countryToContinent[entity] || null; // Restituisce il continente o null se non trovato
+    return countryToContinent[country] || null; // Ritorna null se non mappato
 }
 
 
@@ -243,7 +243,7 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
 
     filteredData.forEach(d => {
         const entity = d.Entity;
-        const continent = mapCountryToContinent(entity);
+        const continent = mapCountryToContinent(d.Entity);
 
         if (continent) {
             // Aggiungi nodo per il continente se non esiste
