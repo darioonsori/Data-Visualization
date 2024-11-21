@@ -60,9 +60,8 @@ function getContinent(entity) {
         }
     }
 
-    // Caricamento del file CSV
     d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
-        const year = 2020; // Seleziona l'anno
+        const year = 2020;
         const filteredData = data.filter(d => +d.Year === year);
 
         const emissionsByCountry = {};
@@ -75,7 +74,6 @@ function getContinent(entity) {
             }
         });
 
-        // Trova i top 5 paesi per continente
         const topCountries = {};
         Object.keys(emissionsByCountry).forEach(continent => {
             topCountries[continent] = emissionsByCountry[continent]
@@ -84,7 +82,6 @@ function getContinent(entity) {
                 .map(d => d.country);
         });
 
-        // Prepara i dati per il grafico
         const chartData = [];
         filteredData.forEach(d => {
             const continent = getContinent(d.Entity);
@@ -108,7 +105,6 @@ function getContinent(entity) {
             }
         });
 
-        // Crea il grafico alluvionale
         createAlluvialChart(chartData);
     }).catch(error => {
         console.error("Errore nel caricamento del CSV:", error);
@@ -118,7 +114,7 @@ function getContinent(entity) {
         const width = 1000;
         const height = 600;
 
-       const svg = d3.select("#chart").append("svg")
+        const svg = d3.select("#chart").append("svg")
             .attr("width", width)
             .attr("height", height);
 
@@ -132,10 +128,13 @@ function getContinent(entity) {
 
         gradient.append("stop")
             .attr("offset", "0%")
-            .attr("stop-color", "#457B9D");
+            .attr("stop-color", "#A8DADC"); // Per valori bassi
+        gradient.append("stop")
+            .attr("offset", "50%")
+            .attr("stop-color", "#457B9D"); // Colore intermedio
         gradient.append("stop")
             .attr("offset", "100%")
-            .attr("stop-color", "#E63946");
+            .attr("stop-color", "#1D3557"); // Per valori alti
 
         const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
             .map(name => ({ name }));
@@ -150,6 +149,7 @@ function getContinent(entity) {
         const sankey = d3.sankey()
             .nodeWidth(20)
             .nodePadding(70)
+            .nodeAlign(d3.sankeyCenter) // Centra i collegamenti
             .extent([[50, 30], [width - 50, height - 30]]);
 
         const graph = sankey({
@@ -165,7 +165,7 @@ function getContinent(entity) {
             .attr("y", d => d.y0)
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => Math.max(1, d.y1 - d.y0))
-            .attr("fill", "#F4A261")
+            .attr("fill", d => d.name in continentMapping ? "#F4A261" : "#2A9D8F")
             .attr("stroke", "#264653")
             .append("title")
             .text(d => `${d.name}\n${d.value}`);
@@ -178,13 +178,13 @@ function getContinent(entity) {
             .data(graph.links)
             .join("path")
             .attr("d", d3.sankeyLinkHorizontal())
-            .attr("stroke", d => d.type === "Fossil" ? "#457B9D" : "#E63946")
+            .attr("stroke", d => d.type === "Fossil" ? "#457B9D" : "#E63946") // Colori distintivi
             .attr("stroke-opacity", 0.8)
-            .attr("stroke-width", d => Math.max(3, d.width))
+            .attr("stroke-width", d => Math.max(3, d.width)) // Spessore minimo garantito
             .on("mouseover", (event, d) => {
                 d3.select(event.target)
                     .attr("stroke-opacity", 1)
-                    .attr("stroke-width", Math.max(5, d.width));
+                    .attr("stroke-width", Math.max(5, d.width)); // Effetto hover
                 tooltip.style("display", "block")
                     .html(`<strong>Link Details</strong><br>Source: ${d.source.name}<br>Target: ${d.target.name}<br>Value: ${d.value}`);
             })
@@ -209,8 +209,35 @@ function getContinent(entity) {
             .attr("text-anchor", d => (d.x0 < width / 2 ? "start" : "end"))
             .text(d => d.name)
             .attr("fill", "#000")
-            .style("font-size", "12px")
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 0.5);
+            .attr("stroke", "#fff") // Contorno bianco per leggibilità
+            .attr("stroke-width", 0.5)
+            .style("font-size", "12px");
+
+        const legend = svg.append("g")
+            .attr("transform", `translate(${width / 2 - 100}, -50)`);
+
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", "#457B9D");
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", 12)
+            .text("Fossil Emissions")
+            .style("font-size", "12px");
+
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", 20)
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", "#E63946");
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", 32)
+            .text("Land-Use Emissions")
+            .style("font-size", "12px");
     }
 });
