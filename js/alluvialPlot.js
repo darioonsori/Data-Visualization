@@ -207,6 +207,14 @@ function mapCountryToContinent(country) {
         "Suriname": "South America",
         "Uruguay": "South America",
         "Venezuela": "South America",
+
+        // Continent-level nodes
+        "Africa": "Africa",
+        "Asia": "Asia",
+        "Europe": "Europe",
+        "North America": "North America",
+        "Oceania": "Oceania",
+        "South America": "South America",
     };
 
     // Ignora aggregazioni non pertinenti
@@ -215,7 +223,8 @@ function mapCountryToContinent(country) {
     ];
 
     if (excludedKeywords.some(keyword => country.includes(keyword))) {
-        return null; // Ignora questa entità
+        console.warn(`Ignored entity: ${country}`);
+        return null;
     }
 
     return countryToContinent[country] || null; // Restituisce il continente o null se non trovato
@@ -244,27 +253,23 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
             nodes.push({ name: country });
         }
 
-        // Aggiungi il link tra continente e paese
-        const emissionValue = +d["Annual CO₂ emissions"];
-        if (emissionValue > 0) {
-            links.push({
-                source: continent,
-                target: country,
-                value: emissionValue
-            });
-        }
+        // Aggiungi link tra continente e paese
+        links.push({
+            source: continent,
+            target: country,
+            value: +d["Annual CO₂ emissions"] || 0 // Assicurati che il valore sia numerico
+        });
     } else {
-        console.warn("Ignored entity:", country); // Logga le entità ignorate per il debug
+            console.warn(`Ignored entity: ${country}`);
     }
-});
-
+    });
+   
+    console.log("Nodes:", nodes);
+    console.log("Links:", links);
 
     // Rimuovi duplicati nei nodi
     const uniqueNodes = [...new Map(nodes.map(item => [item.name, item])).values()];
     
-    console.log("Nodes:", nodes);
-    console.log("Links:", links);
- 
     // Sankey setup
     const width = 800;
     const height = 600;
