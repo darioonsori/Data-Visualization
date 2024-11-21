@@ -214,12 +214,9 @@ function mapCountryToContinent(country) {
 }
 
 
-// Carica il dataset e crea l'alluvial plot
 d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(function (data) {
-    // Filtra i dati per l'anno 2018
     const filteredData = data.filter(d => d.Year === "2018");
 
-    // Crea nodi e link
     const nodes = [];
     const links = [];
 
@@ -228,26 +225,32 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         const continent = mapCountryToContinent(country);
 
         if (continent) {
-            // Aggiungi il nodo continente se non esiste
+            // Aggiungi nodi unici
             if (!nodes.some(node => node.name === continent)) {
                 nodes.push({ name: continent });
             }
-
-            // Aggiungi il nodo paese se non esiste
             if (!nodes.some(node => node.name === country)) {
                 nodes.push({ name: country });
             }
 
-            // Aggiungi il link tra continente e paese
-            links.push({
-                source: continent,
-                target: country,
-                value: +d["Annual CO₂ emissions"]
-            });
+            // Aggiungi collegamenti solo per valori validi
+            const emissionValue = +d["Annual CO₂ emissions"];
+            if (emissionValue > 0) {
+                links.push({
+                    source: continent,
+                    target: country,
+                    value: emissionValue
+                });
+            }
+        } else {
+            console.error("Missing continent mapping for:", country);
         }
     });
 
-    // Imposta dimensioni del grafico
+    // Rimuovi duplicati nei nodi
+    const uniqueNodes = [...new Map(nodes.map(item => [item.name, item])).values()];
+
+    // Sankey setup
     const width = 800;
     const height = 600;
 
@@ -262,11 +265,10 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .extent([[1, 1], [width - 1, height - 6]]);
 
     const { nodes: sankeyNodes, links: sankeyLinks } = sankey({
-        nodes: nodes.map(d => Object.assign({}, d)),
+        nodes: uniqueNodes.map(d => Object.assign({}, d)),
         links: links.map(d => Object.assign({}, d))
     });
 
-    // Disegna i link
     svg.append("g")
         .selectAll("path")
         .data(sankeyLinks)
@@ -277,7 +279,6 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .attr("fill", "none")
         .attr("stroke-opacity", 0.5);
 
-    // Disegna i nodi
     svg.append("g")
         .selectAll("rect")
         .data(sankeyNodes)
@@ -289,7 +290,6 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .attr("fill", "steelblue")
         .attr("stroke", "#000");
 
-    // Aggiungi etichette ai nodi
     svg.append("g")
         .selectAll("text")
         .data(sankeyNodes)
@@ -299,4 +299,7 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .attr("dy", "0.35em")
         .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
         .text(d => d.name);
+
+    console.log("Nodes:", nodes);
+console.log("Links:", links);
 });
