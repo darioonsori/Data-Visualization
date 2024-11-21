@@ -1,5 +1,13 @@
 function mapCountryToContinent(country) {
     const countryToContinent = {
+        // Continent-level nodes
+        "Africa": "Africa",
+        "Asia": "Asia",
+        "Europe": "Europe",
+        "North America": "North America",
+        "Oceania": "Oceania",
+        "South America": "South America",
+        
         // Africa
         "Algeria": "Africa",
         "Angola": "Africa",
@@ -208,13 +216,7 @@ function mapCountryToContinent(country) {
         "Uruguay": "South America",
         "Venezuela": "South America",
 
-        // Continent-level nodes
-        "Africa": "Africa",
-        "Asia": "Asia",
-        "Europe": "Europe",
-        "North America": "North America",
-        "Oceania": "Oceania",
-        "South America": "South America",
+   
     };
 
     // Ignora aggregazioni non pertinenti
@@ -222,55 +224,61 @@ function mapCountryToContinent(country) {
         "(GCP)", "excl.", "aviation", "shipping", "Union", "World", "countries"
     ];
 
-    if (excludedKeywords.some(keyword => country.includes(keyword))) {
-        console.warn(`Ignored entity: ${country}`);
+    if (excludedKeywords.some(keyword => entity.includes(keyword))) {
+        console.warn(`Ignored entity: ${entity}`);
         return null;
     }
 
-    return countryToContinent[country] || null; // Restituisce il continente o null se non trovato
+    return countryToContinent[entity] || null; // Restituisce il continente o null se non trovato
 }
 
 
 
 d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(function (data) {
+    // Filtra i dati per l'anno 2018
     const filteredData = data.filter(d => d.Year === "2018");
 
     const nodes = [];
     const links = [];
 
     filteredData.forEach(d => {
-    const country = d.Entity;
-    const continent = mapCountryToContinent(country);
+        const entity = d.Entity;
+        const continent = mapCountryToContinent(entity);
 
-    if (continent) {
-        // Aggiungi il nodo continente se non esiste
+        if (continent) {
+            // Aggiungi nodo per il continente se non esiste
+            if (!nodes.some(node => node.name === continent)) {
+                nodes.push({ name: continent });
+            }
+
+            // Aggiungi nodo per il paese se non esiste
+            if (!nodes.some(node => node.name === entity)) {
+                nodes.push({ name: entity });
+            }
+
+            // Aggiungi link tra continente e paese
+            links.push({
+                source: continent,
+                target: entity,
+                value: +d["Annual CO₂ emissions"] || 0 // Gestisci valori mancanti
+            });
+        } else {
+            console.warn(`Ignored entity: ${entity}`);
+        }
+    });
+
+    // Verifica che tutti i continenti principali siano presenti nei nodi
+    const continents = ["Africa", "Asia", "Europe", "North America", "Oceania", "South America"];
+    continents.forEach(continent => {
         if (!nodes.some(node => node.name === continent)) {
             nodes.push({ name: continent });
         }
-
-        // Aggiungi il nodo paese se non esiste
-        if (!nodes.some(node => node.name === country)) {
-            nodes.push({ name: country });
-        }
-
-        // Aggiungi link tra continente e paese
-        links.push({
-            source: continent,
-            target: country,
-            value: +d["Annual CO₂ emissions"] || 0 // Assicurati che il valore sia numerico
-        });
-    } else {
-            console.warn(`Ignored entity: ${country}`);
-    }
     });
-   
+
     console.log("Nodes:", nodes);
     console.log("Links:", links);
 
-    // Rimuovi duplicati nei nodi
-    const uniqueNodes = [...new Map(nodes.map(item => [item.name, item])).values()];
-    
-    // Sankey setup
+    // Costruisci il grafico Sankey
     const width = 800;
     const height = 600;
 
@@ -285,10 +293,11 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .extent([[1, 1], [width - 1, height - 6]]);
 
     const { nodes: sankeyNodes, links: sankeyLinks } = sankey({
-        nodes: uniqueNodes.map(d => Object.assign({}, d)),
+        nodes: nodes.map(d => Object.assign({}, d)),
         links: links.map(d => Object.assign({}, d))
     });
 
+    // Disegna i link
     svg.append("g")
         .selectAll("path")
         .data(sankeyLinks)
@@ -299,6 +308,7 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .attr("fill", "none")
         .attr("stroke-opacity", 0.5);
 
+    // Disegna i nodi
     svg.append("g")
         .selectAll("rect")
         .data(sankeyNodes)
@@ -310,6 +320,7 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .attr("fill", "steelblue")
         .attr("stroke", "#000");
 
+    // Aggiungi etichette ai nodi
     svg.append("g")
         .selectAll("text")
         .data(sankeyNodes)
@@ -319,5 +330,4 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .attr("dy", "0.35em")
         .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
         .text(d => d.name);
-
 });
