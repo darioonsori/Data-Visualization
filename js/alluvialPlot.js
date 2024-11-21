@@ -1,4 +1,3 @@
-// Mappatura completa dei paesi ai continenti
 function mapCountryToContinent(country) {
     const countryToContinent = {
         // Africa
@@ -184,7 +183,7 @@ function mapCountryToContinent(country) {
         "Fiji": "Oceania",
         "Kiribati": "Oceania",
         "Marshall Islands": "Oceania",
-        "Micronesia": "Oceania",
+        "Micronesia (country)": "Oceania",
         "Nauru": "Oceania",
         "New Zealand": "Oceania",
         "Palau": "Oceania",
@@ -210,8 +209,18 @@ function mapCountryToContinent(country) {
         "Venezuela": "South America",
     };
 
-    return countryToContinent[country] || null; // Restituisce null se il paese non è trovato
+    // Ignora aggregazioni non pertinenti
+    const excludedKeywords = [
+        "(GCP)", "excl.", "aviation", "shipping", "Union", "World", "countries"
+    ];
+
+    if (excludedKeywords.some(keyword => country.includes(keyword))) {
+        return null; // Ignora questa entità
+    }
+
+    return countryToContinent[country] || null; // Restituisce il continente o null se non trovato
 }
+
 
 
 d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(function (data) {
@@ -221,35 +230,41 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
     const links = [];
 
     filteredData.forEach(d => {
-        const country = d.Entity;
-        const continent = mapCountryToContinent(country);
+    const country = d.Entity;
+    const continent = mapCountryToContinent(country);
 
-        if (continent) {
-            // Aggiungi nodi unici
-            if (!nodes.some(node => node.name === continent)) {
-                nodes.push({ name: continent });
-            }
-            if (!nodes.some(node => node.name === country)) {
-                nodes.push({ name: country });
-            }
-
-            // Aggiungi collegamenti solo per valori validi
-            const emissionValue = +d["Annual CO₂ emissions"];
-            if (emissionValue > 0) {
-                links.push({
-                    source: continent,
-                    target: country,
-                    value: emissionValue
-                });
-            }
-        } else {
-            console.error("Missing continent mapping for:", country);
+    if (continent) {
+        // Aggiungi il nodo continente se non esiste
+        if (!nodes.some(node => node.name === continent)) {
+            nodes.push({ name: continent });
         }
-    });
+
+        // Aggiungi il nodo paese se non esiste
+        if (!nodes.some(node => node.name === country)) {
+            nodes.push({ name: country });
+        }
+
+        // Aggiungi il link tra continente e paese
+        const emissionValue = +d["Annual CO₂ emissions"];
+        if (emissionValue > 0) {
+            links.push({
+                source: continent,
+                target: country,
+                value: emissionValue
+            });
+        }
+    } else {
+        console.warn("Ignored entity:", country); // Logga le entità ignorate per il debug
+    }
+});
+
 
     // Rimuovi duplicati nei nodi
     const uniqueNodes = [...new Map(nodes.map(item => [item.name, item])).values()];
-
+    
+    console.log("Nodes:", nodes);
+    console.log("Links:", links);
+ 
     // Sankey setup
     const width = 800;
     const height = 600;
@@ -300,6 +315,4 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
         .text(d => d.name);
 
-    console.log("Nodes:", nodes);
-console.log("Links:", links);
 });
