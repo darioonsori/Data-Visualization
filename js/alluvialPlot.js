@@ -1,7 +1,8 @@
 // Load the CSV data
 d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(function (data) {
-  // Filter data for the target year
   const year = "2018";
+
+  // Filter the data for the target year
   const filteredData = data.filter(d => +d.Year === +year);
 
   // Define continent mappings for countries
@@ -15,19 +16,20 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
     // Add more mappings as needed
   };
 
-  // Prepare data for the Sankey diagram
   const sankeyData = { nodes: [], links: [] };
   const nodeSet = new Set();
 
+  // Add nodes and links
   filteredData.forEach(d => {
     const continent = continentMapping[d.Entity] || "Other";
 
-    // Add continent and country as nodes
+    // Ensure the continent node exists
     if (!nodeSet.has(continent)) {
       sankeyData.nodes.push({ name: continent });
       nodeSet.add(continent);
     }
 
+    // Ensure the country node exists
     if (!nodeSet.has(d.Entity)) {
       sankeyData.nodes.push({ name: d.Entity });
       nodeSet.add(d.Entity);
@@ -49,6 +51,24 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
         target: "Land-Use",
         value: +d["Annual CO₂ emissions from land-use change"]
       });
+
+      // Ensure "Land-Use" node exists
+      if (!nodeSet.has("Land-Use")) {
+        sankeyData.nodes.push({ name: "Land-Use" });
+        nodeSet.add("Land-Use");
+      }
+    }
+  });
+
+  // Check for missing nodes and add them
+  sankeyData.links.forEach(link => {
+    if (!nodeSet.has(link.source)) {
+      sankeyData.nodes.push({ name: link.source });
+      nodeSet.add(link.source);
+    }
+    if (!nodeSet.has(link.target)) {
+      sankeyData.nodes.push({ name: link.target });
+      nodeSet.add(link.target);
     }
   });
 
@@ -56,25 +76,22 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
   const width = 800;
   const height = 500;
 
-  // Create an SVG container
   const svg = d3.select("#alluvial-chart")
     .append("svg")
     .attr("width", width)
     .attr("height", height);
 
-  // Configure the Sankey generator
   const sankey = d3.sankey()
     .nodeWidth(20)
     .nodePadding(10)
     .extent([[1, 1], [width - 1, height - 6]]);
 
-  // Generate Sankey layout
   const { nodes, links } = sankey({
     nodes: sankeyData.nodes.map(d => Object.assign({}, d)),
     links: sankeyData.links.map(d => Object.assign({}, d))
   });
 
-  // Draw the nodes
+  // Draw nodes
   svg.append("g")
     .selectAll("rect")
     .data(nodes)
@@ -86,18 +103,18 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
     .attr("fill", "steelblue")
     .attr("stroke", "black");
 
-  // Draw the links
+  // Draw links
   svg.append("g")
     .selectAll("path")
     .data(links)
     .join("path")
     .attr("d", d3.sankeyLinkHorizontal())
-    .attr("stroke", d => d.color || "gray")
+    .attr("stroke", "gray")
     .attr("stroke-width", d => Math.max(1, d.width))
     .attr("fill", "none")
     .attr("stroke-opacity", 0.5);
 
-  // Add tooltips for nodes
+  // Tooltip for nodes
   svg.selectAll("rect")
     .on("mouseover", function (event, d) {
       d3.select("#tooltip")
