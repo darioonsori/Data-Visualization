@@ -1,328 +1,214 @@
-function mapCountryToContinent(country) {
-    const countryToContinent = {
-        // Continent-level nodes
+document.addEventListener("DOMContentLoaded", function () {
+    // Mappatura completa dei paesi ai continenti
+    const continentMapping = {
         "Africa": "Africa",
         "Asia": "Asia",
         "Europe": "Europe",
         "North America": "North America",
-        "Oceania": "Oceania",
         "South America": "South America",
-        
-        // Africa
+        "Oceania": "Oceania",
+        "Afghanistan": "Asia",
         "Algeria": "Africa",
         "Angola": "Africa",
-        "Benin": "Africa",
-        "Botswana": "Africa",
-        "Burkina Faso": "Africa",
-        "Burundi": "Africa",
-        "Cape Verde": "Africa",
-        "Cameroon": "Africa",
-        "Central African Republic": "Africa",
-        "Chad": "Africa",
-        "Comoros": "Africa",
-        "Congo": "Africa",
-        "Djibouti": "Africa",
-        "Egypt": "Africa",
-        "Equatorial Guinea": "Africa",
-        "Eritrea": "Africa",
-        "Eswatini": "Africa",
-        "Ethiopia": "Africa",
-        "Gabon": "Africa",
-        "Gambia": "Africa",
-        "Ghana": "Africa",
-        "Guinea": "Africa",
-        "Guinea-Bissau": "Africa",
-        "Ivory Coast": "Africa",
-        "Kenya": "Africa",
-        "Lesotho": "Africa",
-        "Liberia": "Africa",
-        "Libya": "Africa",
-        "Madagascar": "Africa",
-        "Malawi": "Africa",
-        "Mali": "Africa",
-        "Mauritania": "Africa",
-        "Mauritius": "Africa",
-        "Morocco": "Africa",
-        "Mozambique": "Africa",
-        "Namibia": "Africa",
-        "Niger": "Africa",
-        "Nigeria": "Africa",
-        "Rwanda": "Africa",
-        "Senegal": "Africa",
-        "Seychelles": "Africa",
-        "Sierra Leone": "Africa",
-        "Somalia": "Africa",
-        "South Africa": "Africa",
-        "South Sudan": "Africa",
-        "Sudan": "Africa",
-        "Tanzania": "Africa",
-        "Togo": "Africa",
-        "Tunisia": "Africa",
-        "Uganda": "Africa",
-        "Zambia": "Africa",
-        "Zimbabwe": "Africa",
-
-        // Asia
-        "Afghanistan": "Asia",
-        "Armenia": "Asia",
-        "Azerbaijan": "Asia",
-        "Bahrain": "Asia",
-        "Bangladesh": "Asia",
-        "Bhutan": "Asia",
-        "Brunei": "Asia",
-        "Cambodia": "Asia",
-        "China": "Asia",
-        "Cyprus": "Asia",
-        "Georgia": "Asia",
-        "India": "Asia",
-        "Indonesia": "Asia",
-        "Iran": "Asia",
-        "Iraq": "Asia",
-        "Israel": "Asia",
-        "Japan": "Asia",
-        "Jordan": "Asia",
-        "Kazakhstan": "Asia",
-        "Kuwait": "Asia",
-        "Kyrgyzstan": "Asia",
-        "Laos": "Asia",
-        "Lebanon": "Asia",
-        "Malaysia": "Asia",
-        "Maldives": "Asia",
-        "Mongolia": "Asia",
-        "Myanmar": "Asia",
-        "Nepal": "Asia",
-        "North Korea": "Asia",
-        "Oman": "Asia",
-        "Pakistan": "Asia",
-        "Palestine": "Asia",
-        "Philippines": "Asia",
-        "Qatar": "Asia",
-        "Saudi Arabia": "Asia",
-        "Singapore": "Asia",
-        "South Korea": "Asia",
-        "Sri Lanka": "Asia",
-        "Syria": "Asia",
-        "Taiwan": "Asia",
-        "Tajikistan": "Asia",
-        "Thailand": "Asia",
-        "Timor-Leste": "Asia",
-        "Turkey": "Asia",
-        "Turkmenistan": "Asia",
-        "United Arab Emirates": "Asia",
-        "Uzbekistan": "Asia",
-        "Vietnam": "Asia",
-        "Yemen": "Asia",
-
-        // Europe
-        "Albania": "Europe",
-        "Andorra": "Europe",
+        "Argentina": "South America",
+        "Australia": "Oceania",
         "Austria": "Europe",
-        "Belarus": "Europe",
+        "Bangladesh": "Asia",
         "Belgium": "Europe",
-        "Bosnia and Herzegovina": "Europe",
-        "Bulgaria": "Europe",
-        "Croatia": "Europe",
-        "Czechia": "Europe",
+        "Brazil": "South America",
+        "Canada": "North America",
+        "Chile": "South America",
+        "China": "Asia",
+        "Colombia": "South America",
+        "Cuba": "North America",
         "Denmark": "Europe",
-        "Estonia": "Europe",
-        "Faroe Islands": "Europe",
-        "Finland": "Europe",
+        "Egypt": "Africa",
         "France": "Europe",
         "Germany": "Europe",
-        "Greece": "Europe",
-        "Hungary": "Europe",
-        "Iceland": "Europe",
-        "Ireland": "Europe",
+        "India": "Asia",
+        "Indonesia": "Asia",
         "Italy": "Europe",
-        "Kosovo": "Europe",
-        "Latvia": "Europe",
-        "Liechtenstein": "Europe",
-        "Lithuania": "Europe",
-        "Luxembourg": "Europe",
-        "Malta": "Europe",
-        "Moldova": "Europe",
-        "Monaco": "Europe",
-        "Montenegro": "Europe",
-        "Netherlands": "Europe",
-        "North Macedonia": "Europe",
+        "Japan": "Asia",
+        "Kenya": "Africa",
+        "Mexico": "North America",
+        "Morocco": "Africa",
+        "Nigeria": "Africa",
         "Norway": "Europe",
-        "Poland": "Europe",
-        "Portugal": "Europe",
-        "Romania": "Europe",
+        "Pakistan": "Asia",
+        "Peru": "South America",
         "Russia": "Europe",
-        "San Marino": "Europe",
-        "Serbia": "Europe",
-        "Slovakia": "Europe",
-        "Slovenia": "Europe",
+        "Saudi Arabia": "Asia",
+        "South Africa": "Africa",
+        "South Korea": "Asia",
         "Spain": "Europe",
         "Sweden": "Europe",
         "Switzerland": "Europe",
-        "Ukraine": "Europe",
+        "Thailand": "Asia",
+        "Turkey": "Asia",
         "United Kingdom": "Europe",
-        "Vatican": "Europe",
-
-        // North America
-        "Antigua and Barbuda": "North America",
-        "Bahamas": "North America",
-        "Barbados": "North America",
-        "Belize": "North America",
-        "Canada": "North America",
-        "Costa Rica": "North America",
-        "Cuba": "North America",
-        "Dominica": "North America",
-        "Dominican Republic": "North America",
-        "El Salvador": "North America",
-        "Grenada": "North America",
-        "Guatemala": "North America",
-        "Haiti": "North America",
-        "Honduras": "North America",
-        "Jamaica": "North America",
-        "Mexico": "North America",
-        "Nicaragua": "North America",
-        "Panama": "North America",
-        "Saint Kitts and Nevis": "North America",
-        "Saint Lucia": "North America",
-        "Saint Vincent and the Grenadines": "North America",
-        "Trinidad and Tobago": "North America",
         "United States": "North America",
-
-        // Oceania
-        "Australia": "Oceania",
-        "Fiji": "Oceania",
-        "Kiribati": "Oceania",
-        "Marshall Islands": "Oceania",
-        "Micronesia (country)": "Oceania",
-        "Nauru": "Oceania",
-        "New Zealand": "Oceania",
-        "Palau": "Oceania",
-        "Papua New Guinea": "Oceania",
-        "Samoa": "Oceania",
-        "Solomon Islands": "Oceania",
-        "Tonga": "Oceania",
-        "Tuvalu": "Oceania",
-        "Vanuatu": "Oceania",
-
-        // South America
-        "Argentina": "South America",
-        "Bolivia": "South America",
-        "Brazil": "South America",
-        "Chile": "South America",
-        "Colombia": "South America",
-        "Ecuador": "South America",
-        "Guyana": "South America",
-        "Paraguay": "South America",
-        "Peru": "South America",
-        "Suriname": "South America",
-        "Uruguay": "South America",
-        "Venezuela": "South America",
-
-   
+        "Vietnam": "Asia",
     };
 
-    // Escludi entità con parole chiave non rilevanti o aggregazioni
-    const excludedKeywords = [
-        "(GCP)", "excl.", "aviation", "shipping", "countries", "Union", "World", "High-income countries",
-        "Low-income countries", "Middle East", "OECD", "Non-OECD"
-    ];
-
-    // Se la variabile `country` contiene uno dei keyword da escludere, ignora questa entità
-    if (excludedKeywords.some(keyword => country.includes(keyword))) {
-        console.warn(`Ignored entity: ${country}`);
-        return null; // Ignora l'entità e ritorna null
+function getContinent(entity) {
+        if (continentMapping[entity]) {
+            return continentMapping[entity];
+        } else if (entity.includes("GCP") || entity.includes("excl.") || entity === "World") {
+            return null;
+        } else {
+            return "Unknown";
+        }
     }
 
-    // Ritorna la mappatura se esiste, altrimenti ritorna null
-    return countryToContinent[country] || null;
-}
+    d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
+        const year = 2020;
+        const filteredData = data.filter(d => +d.Year === year);
 
-
-
-d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(function (data) {
-    // Filtra i dati per l'anno 2018
-    const filteredData = data.filter(d => d.Year === "2018");
-
-    // Crea nodi e link
-    const nodes = [];
-    const links = [];
-
-    filteredData.forEach(d => {
-        const country = d.Entity;
-        const continent = mapCountryToContinent(country);
-
-        if (continent) {
-            // Aggiungi il nodo continente se non esiste
-            if (!nodes.some(node => node.name === continent)) {
-                nodes.push({ name: continent });
+        const emissionsByCountry = {};
+        filteredData.forEach(d => {
+            const continent = getContinent(d.Entity);
+            if (continent && continent !== "Unknown") {
+                const totalEmissions = +d["Annual CO₂ emissions"] + +d["Annual CO₂ emissions from land-use change"];
+                if (!emissionsByCountry[continent]) emissionsByCountry[continent] = [];
+                emissionsByCountry[continent].push({ country: d.Entity, emissions: totalEmissions });
             }
+        });
 
-            // Aggiungi il nodo paese se non esiste
-            if (!nodes.some(node => node.name === country)) {
-                nodes.push({ name: country });
+        const topCountries = {};
+        Object.keys(emissionsByCountry).forEach(continent => {
+            topCountries[continent] = emissionsByCountry[continent]
+                .sort((a, b) => b.emissions - a.emissions)
+                .slice(0, 5)
+                .map(d => d.country);
+        });
+
+        const chartData = [];
+        filteredData.forEach(d => {
+            const continent = getContinent(d.Entity);
+            if (continent && continent !== "Unknown" && topCountries[continent].includes(d.Entity)) {
+                if (+d["Annual CO₂ emissions"] > 0) {
+                    chartData.push({
+                        source: continent,
+                        target: d.Entity,
+                        value: +d["Annual CO₂ emissions"],
+                        type: "Fossil"
+                    });
+                }
+                if (+d["Annual CO₂ emissions from land-use change"] > 0) {
+                    chartData.push({
+                        source: continent,
+                        target: d.Entity,
+                        value: +d["Annual CO₂ emissions from land-use change"],
+                        type: "Land"
+                    });
+                }
             }
+        });
 
-            // Aggiungi il link tra continente e paese
-            links.push({
-                source: continent,
-                target: country,
-                value: +d["Annual CO₂ emissions"]
-            });
-        }
+        createAlluvialChart(chartData);
+    }).catch(error => {
+        console.error("Errore nel caricamento del CSV:", error);
     });
 
-    // Verifica se ci sono nodi e link per procedere con la visualizzazione
-    if (nodes.length > 0 && links.length > 0) {
-        const width = 800;
-        const height = 600;
+    function createAlluvialChart(data) {
+        const width = 1000;
+        const height = 500;
 
-        const svg = d3.select("#alluvial-chart")
-            .append("svg")
+        const svg = d3.select("#chart").append("svg")
             .attr("width", width)
             .attr("height", height);
 
+        const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
+            .map(name => ({ name }));
+        let links = data.map(d => ({
+            source: nodes.findIndex(n => n.name === d.source),
+            target: nodes.findIndex(n => n.name === d.target),
+            value: d.value
+        }));
+
+        links = links.filter(link => link.source !== link.target);
+
         const sankey = d3.sankey()
             .nodeWidth(20)
-            .nodePadding(10)
-            .extent([[1, 1], [width - 1, height - 6]]);
+            .nodePadding(50)
+            .extent([[1, 30], [width - 1, height - 30]]); // Margini superiore e inferiore
 
-        const { nodes: sankeyNodes, links: sankeyLinks } = sankey({
+        const graph = sankey({
             nodes: nodes.map(d => Object.assign({}, d)),
             links: links.map(d => Object.assign({}, d))
         });
 
-        // Disegna i link
-        svg.append("g")
-            .selectAll("path")
-            .data(sankeyLinks)
-            .join("path")
-            .attr("d", d3.sankeyLinkHorizontal())
-            .attr("stroke", "#000")
-            .attr("stroke-width", d => Math.max(1, d.width))
-            .attr("fill", "none")
-            .attr("stroke-opacity", 0.5);
-
-        // Disegna i nodi
         svg.append("g")
             .selectAll("rect")
-            .data(sankeyNodes)
+            .data(graph.nodes)
             .join("rect")
             .attr("x", d => d.x0)
             .attr("y", d => d.y0)
             .attr("width", d => d.x1 - d.x0)
-            .attr("height", d => d.y1 - d.y0)
-            .attr("fill", "steelblue")
-            .attr("stroke", "#000");
+            .attr("height", d => Math.max(1, d.y1 - d.y0))
+            .attr("fill", d => d.name in continentMapping ? "#F4A261" : d.name === "Fossil" ? "#2A9D8F" : "#E76F51")
+            .attr("stroke", "#264653")
+            .append("title")
+            .text(d => `${d.name}\n${d.value}`);
 
-        // Aggiungi etichette ai nodi
+        const tooltip = d3.select("#tooltip");
+
+        svg.append("g")
+            .attr("fill", "none")
+            .selectAll("path")
+            .data(graph.links)
+            .join("path")
+            .attr("d", d3.sankeyLinkHorizontal())
+            .attr("stroke", d => d.type === "Fossil" ? "#1D3557" : "#E63946")
+            .attr("stroke-opacity", 0.8)
+            .attr("stroke-width", d => Math.max(2, d.width))
+            .on("mouseover", (event, d) => {
+                tooltip.style("display", "block")
+                    .html(`Source: ${d.source.name}<br>Target: ${d.target.name}<br>Value: ${d.value}`);
+            })
+            .on("mousemove", event => {
+                tooltip.style("top", (event.pageY + 10) + "px")
+                    .style("left", (event.pageX + 10) + "px");
+            })
+            .on("mouseout", () => tooltip.style("display", "none"));
+
         svg.append("g")
             .selectAll("text")
-            .data(sankeyNodes)
+            .data(graph.nodes)
             .join("text")
-            .attr("x", d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+            .attr("x", d => (d.x0 < width / 2 ? d.x1 + 15 : d.x0 - 15))
             .attr("y", d => (d.y1 + d.y0) / 2)
             .attr("dy", "0.35em")
-            .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
-            .text(d => d.name);
-    } else {
-        console.warn("Nessun dato valido per generare il grafico.");
+            .attr("text-anchor", d => (d.x0 < width / 2 ? "start" : "end"))
+            .text(d => d.name)
+            .attr("fill", "#000")
+            .style("font-size", "12px");
+
+        const legend = svg.append("g")
+            .attr("transform", `translate(${width / 2 - 100}, -50)`); // Posizionata sopra il grafico
+
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", "#1D3557");
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", 12)
+            .text("Fossil Emissions")
+            .style("font-size", "12px");
+
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", 20)
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", "#E63946");
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", 32)
+            .text("Land-Use Emissions")
+            .style("font-size", "12px");
     }
 });
