@@ -61,12 +61,15 @@ function getContinent(entity) {
     }
 
     d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
+        console.log("Data loaded:", data);
         const year = 2020;
         const filteredData = data.filter(d => +d.Year === year);
+        console.log("Filtered Data:", filteredData);
 
         const emissionsByCountry = {};
         filteredData.forEach(d => {
             const continent = getContinent(d.Entity);
+            console.log(`Entity: ${d.Entity}, Continent: ${continent}`);
             if (continent && continent !== "Unknown") {
                 const totalEmissions = +d["Annual CO₂ emissions"] + +d["Annual CO₂ emissions from land-use change"];
                 if (!emissionsByCountry[continent]) emissionsByCountry[continent] = [];
