@@ -219,17 +219,20 @@ function mapCountryToContinent(country) {
    
     };
 
-    // Ignora aggregazioni non pertinenti
+    // Escludi entità con parole chiave non rilevanti o aggregazioni
     const excludedKeywords = [
-        "(GCP)", "excl.", "aviation", "shipping", "Union", "World", "countries"
+        "(GCP)", "excl.", "aviation", "shipping", "countries", "Union", "World", "High-income countries",
+        "Low-income countries", "Middle East", "OECD", "Non-OECD"
     ];
 
+    // Se la variabile `country` contiene uno dei keyword da escludere, ignora questa entità
     if (excludedKeywords.some(keyword => country.includes(keyword))) {
         console.warn(`Ignored entity: ${country}`);
-        return null;
+        return null; // Ignora l'entità e ritorna null
     }
 
-    return countryToContinent[country] || null; // Ritorna null se non mappato
+    // Ritorna la mappatura se esiste, altrimenti ritorna null
+    return countryToContinent[country] || null;
 }
 
 
@@ -238,96 +241,88 @@ d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(functi
     // Filtra i dati per l'anno 2018
     const filteredData = data.filter(d => d.Year === "2018");
 
+    // Crea nodi e link
     const nodes = [];
     const links = [];
 
     filteredData.forEach(d => {
-        const entity = d.Entity;
-        const continent = mapCountryToContinent(d.Entity);
+        const country = d.Entity;
+        const continent = mapCountryToContinent(country);
 
         if (continent) {
-            // Aggiungi nodo per il continente se non esiste
+            // Aggiungi il nodo continente se non esiste
             if (!nodes.some(node => node.name === continent)) {
                 nodes.push({ name: continent });
             }
 
-            // Aggiungi nodo per il paese se non esiste
-            if (!nodes.some(node => node.name === entity)) {
-                nodes.push({ name: entity });
+            // Aggiungi il nodo paese se non esiste
+            if (!nodes.some(node => node.name === country)) {
+                nodes.push({ name: country });
             }
 
-            // Aggiungi link tra continente e paese
+            // Aggiungi il link tra continente e paese
             links.push({
                 source: continent,
-                target: entity,
-                value: +d["Annual CO₂ emissions"] || 0 // Gestisci valori mancanti
+                target: country,
+                value: +d["Annual CO₂ emissions"]
             });
-        } else {
-            console.warn(`Ignored entity: ${entity}`);
         }
     });
 
-    // Verifica che tutti i continenti principali siano presenti nei nodi
-    const continents = ["Africa", "Asia", "Europe", "North America", "Oceania", "South America"];
-    continents.forEach(continent => {
-        if (!nodes.some(node => node.name === continent)) {
-            nodes.push({ name: continent });
-        }
-    });
+    // Verifica se ci sono nodi e link per procedere con la visualizzazione
+    if (nodes.length > 0 && links.length > 0) {
+        const width = 800;
+        const height = 600;
 
-    console.log("Nodes:", nodes);
-    console.log("Links:", links);
+        const svg = d3.select("#alluvial-chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-    // Costruisci il grafico Sankey
-    const width = 800;
-    const height = 600;
+        const sankey = d3.sankey()
+            .nodeWidth(20)
+            .nodePadding(10)
+            .extent([[1, 1], [width - 1, height - 6]]);
 
-    const svg = d3.select("#alluvial-chart")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+        const { nodes: sankeyNodes, links: sankeyLinks } = sankey({
+            nodes: nodes.map(d => Object.assign({}, d)),
+            links: links.map(d => Object.assign({}, d))
+        });
 
-    const sankey = d3.sankey()
-        .nodeWidth(20)
-        .nodePadding(10)
-        .extent([[1, 1], [width - 1, height - 6]]);
+        // Disegna i link
+        svg.append("g")
+            .selectAll("path")
+            .data(sankeyLinks)
+            .join("path")
+            .attr("d", d3.sankeyLinkHorizontal())
+            .attr("stroke", "#000")
+            .attr("stroke-width", d => Math.max(1, d.width))
+            .attr("fill", "none")
+            .attr("stroke-opacity", 0.5);
 
-    const { nodes: sankeyNodes, links: sankeyLinks } = sankey({
-        nodes: nodes.map(d => Object.assign({}, d)),
-        links: links.map(d => Object.assign({}, d))
-    });
+        // Disegna i nodi
+        svg.append("g")
+            .selectAll("rect")
+            .data(sankeyNodes)
+            .join("rect")
+            .attr("x", d => d.x0)
+            .attr("y", d => d.y0)
+            .attr("width", d => d.x1 - d.x0)
+            .attr("height", d => d.y1 - d.y0)
+            .attr("fill", "steelblue")
+            .attr("stroke", "#000");
 
-    // Disegna i link
-    svg.append("g")
-        .selectAll("path")
-        .data(sankeyLinks)
-        .join("path")
-        .attr("d", d3.sankeyLinkHorizontal())
-        .attr("stroke", "#000")
-        .attr("stroke-width", d => Math.max(1, d.width))
-        .attr("fill", "none")
-        .attr("stroke-opacity", 0.5);
-
-    // Disegna i nodi
-    svg.append("g")
-        .selectAll("rect")
-        .data(sankeyNodes)
-        .join("rect")
-        .attr("x", d => d.x0)
-        .attr("y", d => d.y0)
-        .attr("width", d => d.x1 - d.x0)
-        .attr("height", d => d.y1 - d.y0)
-        .attr("fill", "steelblue")
-        .attr("stroke", "#000");
-
-    // Aggiungi etichette ai nodi
-    svg.append("g")
-        .selectAll("text")
-        .data(sankeyNodes)
-        .join("text")
-        .attr("x", d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
-        .attr("y", d => (d.y1 + d.y0) / 2)
-        .attr("dy", "0.35em")
-        .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
-        .text(d => d.name);
+        // Aggiungi etichette ai nodi
+        svg.append("g")
+            .selectAll("text")
+            .data(sankeyNodes)
+            .join("text")
+            .attr("x", d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+            .attr("y", d => (d.y1 + d.y0) / 2)
+            .attr("dy", "0.35em")
+            .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
+            .text(d => d.name);
+    } else {
+        console.warn("Nessun dato valido per generare il grafico.");
+    }
 });
