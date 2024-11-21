@@ -60,8 +60,9 @@ function getContinent(entity) {
         }
     }
 
+    // Caricamento del file CSV
     d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
-        const year = 2020;
+        const year = 2020; // Seleziona l'anno
         const filteredData = data.filter(d => +d.Year === year);
 
         const emissionsByCountry = {};
@@ -74,6 +75,7 @@ function getContinent(entity) {
             }
         });
 
+        // Trova i top 5 paesi per continente
         const topCountries = {};
         Object.keys(emissionsByCountry).forEach(continent => {
             topCountries[continent] = emissionsByCountry[continent]
@@ -82,6 +84,7 @@ function getContinent(entity) {
                 .map(d => d.country);
         });
 
+        // Prepara i dati per il grafico
         const chartData = [];
         filteredData.forEach(d => {
             const continent = getContinent(d.Entity);
@@ -105,6 +108,7 @@ function getContinent(entity) {
             }
         });
 
+        // Crea il grafico alluvionale
         createAlluvialChart(chartData);
     }).catch(error => {
         console.error("Errore nel caricamento del CSV:", error);
@@ -114,7 +118,7 @@ function getContinent(entity) {
         const width = 1000;
         const height = 500;
 
-        const svg = d3.select("#chart").append("svg")
+        const svg = d3.select("#alluvial-chart").append("svg") // Punta al contenitore corretto
             .attr("width", width)
             .attr("height", height);
 
