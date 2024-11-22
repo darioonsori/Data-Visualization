@@ -120,8 +120,9 @@ console.log("Filtered Chart Data:", chartData);
         const svg = d3.select("#chart").append("svg")
             .attr("width", width)
             .attr("height", height)
-            .style("border", "1px solid black");
-
+            .style("border", "1px solid black") // Bordo per debug
+            .style("background-color", "#f0f0f0"); // Sfondo per visualizzare l'area
+        
         const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
             .map(name => ({ name }));
         let links = data.map(d => ({
@@ -137,7 +138,7 @@ console.log("Filtered Chart Data:", chartData);
 
         const sankey = d3.sankey()
             .nodeWidth(20)
-            .nodePadding(50)
+            .nodePadding(80)
             .extent([[1, 30], [width - 1, height - 30]]); // Margini superiore e inferiore
 
         const graph = sankey({
@@ -145,16 +146,30 @@ console.log("Filtered Chart Data:", chartData);
             links: links.map(d => Object.assign({}, d))
         });
 
+        console.log("Nodi Posizionati:", graph.nodes.map(d => ({
+    name: d.name,
+    x0: d.x0,
+    x1: d.x1,
+    y0: d.y0,
+    y1: d.y1
+})));
+        
         svg.append("g")
             .selectAll("rect")
             .data(graph.nodes)
             .join("rect")
             .attr("x", d => d.x0)
             .attr("y", d => d.y0)
-            .attr("width", d => d.x1 - d.x0)
-            .attr("height", d => Math.max(1, d.y1 - d.y0))
-            .attr("fill", d => d.name in continentMapping ? "#F4A261" : d.name === "Fossil" ? "#2A9D8F" : "#E76F51")
-            .attr("stroke", "#264653")
+                .attr("width", d => {
+        console.log(`Nodo: ${d.name}, Width: ${d.x1 - d.x0}`); // Log larghezza nodo
+        return d.x1 - d.x0;
+    })
+    .attr("height", d => {
+        console.log(`Nodo: ${d.name}, Height: ${Math.max(1, d.y1 - d.y0)}`); // Log altezza nodo
+        return Math.max(1, d.y1 - d.y0);
+    })
+    .attr("fill", d => d.name in continentMapping ? "#F4A261" : "#2A9D8F")
+    .attr("stroke", "#264653")
             .append("title")
             .text(d => `${d.name}\n${d.value}`);
 
