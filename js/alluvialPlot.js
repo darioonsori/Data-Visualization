@@ -106,8 +106,6 @@ function getContinent(entity) {
             }
         });
 console.log("Filtered Chart Data:", chartData);
-console.log("Nodes:", nodes);
-console.log("Links:", links);
 
         createAlluvialChart(chartData);
     }).catch(error => {
@@ -133,6 +131,9 @@ console.log("Links:", links);
         }));
 
         links = links.filter(link => link.source !== link.target);
+
+        console.log("Nodes:", nodes);
+        console.log("Links:", links);
 
         const sankey = d3.sankey()
             .nodeWidth(20)
