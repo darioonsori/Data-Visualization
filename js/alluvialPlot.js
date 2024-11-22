@@ -121,7 +121,7 @@ console.log("Links:", links);
 
         const svg = d3.select("#chart").append("svg")
             .attr("width", width)
-            .attr("height", height);
+            .attr("height", height)
             .style("border", "1px solid black");
 
         const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
