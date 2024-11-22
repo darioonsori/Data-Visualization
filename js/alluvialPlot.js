@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "Vietnam": "Asia",
     };
 
-function getContinent(entity) {
+ function getContinent(entity) {
         if (continentMapping[entity]) {
             return continentMapping[entity];
         } else if (entity.includes("GCP") || entity.includes("excl.") || entity === "World") {
@@ -60,7 +60,7 @@ function getContinent(entity) {
         }
     }
 
-    d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
+    d3.csv("data/co2-fossil-plus-land-use.csv").then(data => {
         const year = 2020;
         const filteredData = data.filter(d => +d.Year === year);
 
@@ -110,7 +110,7 @@ function getContinent(entity) {
         console.error("Errore nel caricamento del CSV:", error);
     });
 
-function createAlluvialChart(data) {
+    function createAlluvialChart(data) {
         const width = 1000;
         const height = 500;
 
@@ -119,19 +119,19 @@ function createAlluvialChart(data) {
             .attr("height", height);
 
         const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
-            .map(name => ({ name }))
-            .filter(node => node.name); // Rimuove nodi non validi
-
-        const links = data.map(d => ({
+            .map(name => ({ name }));
+        let links = data.map(d => ({
             source: nodes.findIndex(n => n.name === d.source),
             target: nodes.findIndex(n => n.name === d.target),
             value: d.value
-        })).filter(link => link.source !== link.target); // Filtra collegamenti circolari
+        }));
+
+        links = links.filter(link => link.source !== link.target);
 
         const sankey = d3.sankey()
             .nodeWidth(20)
             .nodePadding(50)
-            .extent([[1, 30], [width - 1, height - 30]]);
+            .extent([[1, 30], [width - 1, height - 30]]); // Margini superiore e inferiore
 
         const graph = sankey({
             nodes: nodes.map(d => Object.assign({}, d)),
@@ -146,10 +146,12 @@ function createAlluvialChart(data) {
             .attr("y", d => d.y0)
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => Math.max(1, d.y1 - d.y0))
-            .attr("fill", d => d.name in continentMapping ? "#F4A261" : "#2A9D8F")
+            .attr("fill", d => d.name in continentMapping ? "#F4A261" : d.name === "Fossil" ? "#2A9D8F" : "#E76F51")
             .attr("stroke", "#264653")
             .append("title")
             .text(d => `${d.name}\n${d.value}`);
+
+        const tooltip = d3.select("#tooltip");
 
         svg.append("g")
             .attr("fill", "none")
@@ -161,18 +163,14 @@ function createAlluvialChart(data) {
             .attr("stroke-opacity", 0.8)
             .attr("stroke-width", d => Math.max(2, d.width))
             .on("mouseover", (event, d) => {
-                d3.select("#tooltip")
-                    .style("visibility", "visible")
+                tooltip.style("display", "block")
                     .html(`Source: ${d.source.name}<br>Target: ${d.target.name}<br>Value: ${d.value}`);
             })
             .on("mousemove", event => {
-                d3.select("#tooltip")
-                    .style("top", `${event.pageY + 10}px`)
-                    .style("left", `${event.pageX + 10}px`);
+                tooltip.style("top", (event.pageY + 10) + "px")
+                    .style("left", (event.pageX + 10) + "px");
             })
-            .on("mouseout", () => {
-                d3.select("#tooltip").style("visibility", "hidden");
-            });
+            .on("mouseout", () => tooltip.style("display", "none"));
 
         svg.append("g")
             .selectAll("text")
@@ -187,7 +185,7 @@ function createAlluvialChart(data) {
             .style("font-size", "12px");
 
         const legend = svg.append("g")
-            .attr("transform", `translate(${width / 2 - 100}, -50)`);
+            .attr("transform", `translate(${width / 2 - 100}, -50)`); // Posizionata sopra il grafico
 
         legend.append("rect")
             .attr("x", 0)
