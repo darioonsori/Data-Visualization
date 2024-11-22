@@ -119,12 +119,14 @@ function createAlluvialChart(data) {
             .attr("height", height);
 
         const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
-            .map(name => ({ name }));
+            .map(name => ({ name }))
+            .filter(node => node.name); // Rimuove nodi non validi
+
         const links = data.map(d => ({
             source: nodes.findIndex(n => n.name === d.source),
             target: nodes.findIndex(n => n.name === d.target),
             value: d.value
-        }));
+        })).filter(link => link.source !== link.target); // Filtra collegamenti circolari
 
         const sankey = d3.sankey()
             .nodeWidth(20)
@@ -144,12 +146,10 @@ function createAlluvialChart(data) {
             .attr("y", d => d.y0)
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => Math.max(1, d.y1 - d.y0))
-            .attr("fill", d => d.name in continentMapping ? "#F4A261" : d.name === "Fossil" ? "#2A9D8F" : "#E76F51")
+            .attr("fill", d => d.name in continentMapping ? "#F4A261" : "#2A9D8F")
             .attr("stroke", "#264653")
             .append("title")
             .text(d => `${d.name}\n${d.value}`);
-
-        const tooltip = d3.select("#tooltip");
 
         svg.append("g")
             .attr("fill", "none")
@@ -161,14 +161,18 @@ function createAlluvialChart(data) {
             .attr("stroke-opacity", 0.8)
             .attr("stroke-width", d => Math.max(2, d.width))
             .on("mouseover", (event, d) => {
-                tooltip.style("display", "block")
+                d3.select("#tooltip")
+                    .style("visibility", "visible")
                     .html(`Source: ${d.source.name}<br>Target: ${d.target.name}<br>Value: ${d.value}`);
             })
             .on("mousemove", event => {
-                tooltip.style("top", `${event.pageY + 10}px`)
+                d3.select("#tooltip")
+                    .style("top", `${event.pageY + 10}px`)
                     .style("left", `${event.pageX + 10}px`);
             })
-            .on("mouseout", () => tooltip.style("display", "none"));
+            .on("mouseout", () => {
+                d3.select("#tooltip").style("visibility", "hidden");
+            });
 
         svg.append("g")
             .selectAll("text")
