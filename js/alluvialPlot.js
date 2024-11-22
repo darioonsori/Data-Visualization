@@ -110,7 +110,7 @@ function getContinent(entity) {
         console.error("Errore nel caricamento del CSV:", error);
     });
 
-    function createAlluvialChart(data) {
+function createAlluvialChart(data) {
         const width = 1000;
         const height = 500;
 
@@ -120,18 +120,16 @@ function getContinent(entity) {
 
         const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
             .map(name => ({ name }));
-        let links = data.map(d => ({
+        const links = data.map(d => ({
             source: nodes.findIndex(n => n.name === d.source),
             target: nodes.findIndex(n => n.name === d.target),
             value: d.value
         }));
 
-        links = links.filter(link => link.source !== link.target);
-
         const sankey = d3.sankey()
             .nodeWidth(20)
             .nodePadding(50)
-            .extent([[1, 30], [width - 1, height - 30]]); // Margini superiore e inferiore
+            .extent([[1, 30], [width - 1, height - 30]]);
 
         const graph = sankey({
             nodes: nodes.map(d => Object.assign({}, d)),
@@ -149,7 +147,7 @@ function getContinent(entity) {
             .attr("fill", d => d.name in continentMapping ? "#F4A261" : d.name === "Fossil" ? "#2A9D8F" : "#E76F51")
             .attr("stroke", "#264653")
             .append("title")
-            .text(d => ${d.name}\n${d.value});
+            .text(d => `${d.name}\n${d.value}`);
 
         const tooltip = d3.select("#tooltip");
 
@@ -164,11 +162,11 @@ function getContinent(entity) {
             .attr("stroke-width", d => Math.max(2, d.width))
             .on("mouseover", (event, d) => {
                 tooltip.style("display", "block")
-                    .html(Source: ${d.source.name}<br>Target: ${d.target.name}<br>Value: ${d.value});
+                    .html(`Source: ${d.source.name}<br>Target: ${d.target.name}<br>Value: ${d.value}`);
             })
             .on("mousemove", event => {
-                tooltip.style("top", (event.pageY + 10) + "px")
-                    .style("left", (event.pageX + 10) + "px");
+                tooltip.style("top", `${event.pageY + 10}px`)
+                    .style("left", `${event.pageX + 10}px`);
             })
             .on("mouseout", () => tooltip.style("display", "none"));
 
@@ -185,7 +183,7 @@ function getContinent(entity) {
             .style("font-size", "12px");
 
         const legend = svg.append("g")
-            .attr("transform", translate(${width / 2 - 100}, -50)); // Posizionata sopra il grafico
+            .attr("transform", `translate(${width / 2 - 100}, -50)`);
 
         legend.append("rect")
             .attr("x", 0)
