@@ -10,12 +10,13 @@
   <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
 
   <style>
-      #chart {
-    width: 100%;
-    height: 500px; /* Imposta un'altezza visibile */
-    position: relative;
-  }
-    
+    #chart {
+      width: 100%;
+      height: 500px;
+      /* Imposta un'altezza visibile */
+      position: relative;
+    }
+
     .tooltip {
       position: absolute;
       background-color: white;
@@ -124,11 +125,14 @@
   <!-- Distributions Section -->
   <section id="distributions">
     <h3>Distributions - Alluvial Plot</h3>
-    <p>This section visualizes the distribution of CO₂ emissions by continent, country, and emission type (Fossil vs Land-Use) using an alluvial plot.</p>
+    <p>This section visualizes the distribution of CO₂ emissions by continent, country, and emission type (Fossil vs
+      Land-Use) using an alluvial plot.</p>
     <div id="chart"></div>
   </section>
   <!-- Tooltip for displaying link information -->
-<div id="tooltip" style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 5px; font-size: 12px; pointer-events: none;"></div>
+  <div id="tooltip"
+    style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 5px; font-size: 12px; pointer-events: none;">
+  </div>
 
   <!-- Link to JavaScript files -->
   <script src="js/barChart.js"></script>
