@@ -114,6 +114,7 @@ console.log("Filtered Chart Data:", chartData);
 
     
     function createAlluvialChart(data) {
+        console.log("Chart Data per il Sankey:", data);
         const width = 1000;
         const height = 500;
 
