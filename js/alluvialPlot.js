@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Add a legend to explain link colors
 const legend = svg.append("g")
-    .attr("transform", `translate(${width - 200}, ${height - 100})`); // Position legend in the bottom-right corner
+    .attr("transform", `translate(${width - 50}, ${height - 40})`); // Position legend in the bottom-right corner
 
 // Fossil emissions legend entry
 legend.append("rect")
