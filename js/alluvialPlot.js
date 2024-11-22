@@ -61,6 +61,7 @@ function getContinent(entity) {
     }
 
     d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
+        console.log("Dati caricati:", data);
         const year = 2020;
         const filteredData = data.filter(d => +d.Year === year);
 
@@ -104,12 +105,16 @@ function getContinent(entity) {
                 }
             }
         });
+console.log("Filtered Chart Data:", chartData);
+console.log("Nodes:", nodes);
+console.log("Links:", links);
 
         createAlluvialChart(chartData);
     }).catch(error => {
         console.error("Errore nel caricamento del CSV:", error);
     });
 
+    
     function createAlluvialChart(data) {
         const width = 1000;
         const height = 500;
@@ -117,6 +122,7 @@ function getContinent(entity) {
         const svg = d3.select("#chart").append("svg")
             .attr("width", width)
             .attr("height", height);
+            .style("border", "1px solid black");
 
         const nodes = Array.from(new Set(data.map(d => d.source).concat(data.map(d => d.target))))
             .map(name => ({ name }));
