@@ -215,37 +215,5 @@ document.addEventListener("DOMContentLoaded", function () {
             .attr("fill", "#000")
             .style("font-size", "12px");
 
-// Add a legend to explain link colors
-const legend = svg.append("g")
-    .attr("transform", `translate(${width - 50}, ${height - 40})`); // Position legend in the bottom-right corner
-
-// Fossil emissions legend entry
-legend.append("rect")
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("width", 15)
-    .attr("height", 15)
-    .attr("fill", "#1D3557"); // Fossil emissions color
-legend.append("text")
-    .attr("x", 20)
-    .attr("y", 12)
-    .text("Fossil Emissions")
-    .style("font-size", "12px")
-    .style("alignment-baseline", "middle");
-
-// Land-use emissions legend entry
-legend.append("rect")
-    .attr("x", 0)
-    .attr("y", 25)
-    .attr("width", 15)
-    .attr("height", 15)
-    .attr("fill", "#E63946"); // Land-use emissions color
-legend.append("text")
-    .attr("x", 20)
-    .attr("y", 37)
-    .text("Land-Use Emissions")
-    .style("font-size", "12px")
-    .style("alignment-baseline", "middle");
-}
 
 });
