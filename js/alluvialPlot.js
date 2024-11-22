@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "Vietnam": "Asia",
     };
 
- function getContinent(entity) {
+function getContinent(entity) {
         if (continentMapping[entity]) {
             return continentMapping[entity];
         } else if (entity.includes("GCP") || entity.includes("excl.") || entity === "World") {
