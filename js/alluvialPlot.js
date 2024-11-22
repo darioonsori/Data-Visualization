@@ -50,6 +50,17 @@ document.addEventListener("DOMContentLoaded", function () {
     "Vietnam": "Asia",
   };
 
+      // Function to map countries to their continents
+    function getContinent(entity) {
+        if (continentMapping[entity]) {
+            return continentMapping[entity];
+        } else if (entity.includes("GCP") || entity.includes("excl.") || entity === "World") {
+            return null;
+        } else {
+            return "Unknown";
+        }
+    }
+  
   // Load the CSV file
   d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
     console.log("Data loaded:", data);
