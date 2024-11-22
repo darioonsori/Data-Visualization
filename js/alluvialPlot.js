@@ -50,18 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "Vietnam": "Asia",
     };
 
-    // Function to get the continent of a given entity
-    function getContinent(entity) {
-        if (continentMapping[entity]) {
-            return continentMapping[entity]; // Return the mapped continent
-        } else if (entity.includes("GCP") || entity.includes("excl.") || entity === "World") {
-            return null; // Ignore specific aggregated groups
-        } else {
-            return "Unknown"; // Default for unrecognized entities
-        }
-    }
-
-    // Load the CSV file
+ // Load the CSV file
     d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
         console.log("Data loaded:", data);
 
@@ -170,7 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .append("title")
             .text(d => `${d.name}\n${d.value}`);
 
-        // Create and manage the tooltip
+        // Tooltip management
         const tooltip = d3.select("#tooltip");
 
         // Render links between nodes
@@ -214,6 +203,5 @@ document.addEventListener("DOMContentLoaded", function () {
             .text(d => d.name)
             .attr("fill", "#000")
             .style("font-size", "12px");
-
-
+    }
 });
