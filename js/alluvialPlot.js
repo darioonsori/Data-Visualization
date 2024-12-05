@@ -63,8 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
   
   // Load the CSV file
   d3.csv("data/co2-fossil-plus-land-use/co2-fossil-plus-land-use.csv").then(data => {
-    console.log("Data loaded:", data);
-
+  
     // Filter data for the specified year
     const year = 2020;
     const filteredData = data.filter(d => +d.Year === year);
