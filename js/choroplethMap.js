@@ -36,7 +36,7 @@ const countryNameMap = {
 // Carica i dati
 Promise.all([
   d3.json("data/custom.geo.json"), // GeoJSON file
-  d3.csv("data/co-emissions-per-capita.csv") // CSV file
+  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // CSV file
 ]).then(([geoData, csvData]) => {
   // Prepara i dati delle emissioni
   const emissionsData = {};
