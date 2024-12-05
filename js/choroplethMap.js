@@ -1,55 +1,75 @@
-// Path to data files
-const geoJsonUrl = 'data/custom.geo.json';
-const emissionsCsvUrl = 'data/co-emissions-per-capita/co-emissions-per-capita.csv';
-
-// Initialize map
-const width = 960, height = 600;
-const svg = d3.select("#map").append("svg")
-  .attr("width", width)
-  .attr("height", height);
-
-const projection = d3.geoNaturalEarth1().scale(150).translate([width / 2, height / 2]);
-const path = d3.geoPath().projection(projection);
-
-const colorScale = d3.scaleQuantize()
-  .domain([0, 50]) // Adjust domain based on your data range
-  .range(d3.schemeBlues[9]);
-
-// Load data
+// Carica i dati GeoJSON e CSV
 Promise.all([
-  d3.json(geoJsonUrl),
-  d3.csv(emissionsCsvUrl)
-]).then(([geoJson, emissionsData]) => {
-  // Create a mapping of country codes to emissions
-  const emissionsMap = {};
-  emissionsData.forEach(d => {
-    emissionsMap[d['Country Code']] = +d['2018']; // Adjust key and value based on your CSV
+  d3.json("data/custom.geo.json"), // Path al tuo GeoJSON
+  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // Path al tuo CSV
+]).then(([geoData, csvData]) => {
+  // Trasforma i dati CSV in un oggetto per un accesso più rapido
+  const emissionsData = {};
+  csvData.forEach(row => {
+    emissionsData[row.Country] = +row["2018"]; // Assumi che la colonna per il 2018 sia etichettata "2018"
   });
 
-  // Bind data to GeoJSON
-  geoJson.features.forEach(feature => {
-    const countryCode = feature.properties.iso_a3;
-    feature.properties.emissions = emissionsMap[countryCode] || 0;
+  // Aggiungi il valore di emissioni per ciascun paese nel GeoJSON
+  geoData.features.forEach(feature => {
+    const countryName = feature.properties.name; // Nome del paese dal GeoJSON
+    feature.properties.emissions = emissionsData[countryName] || 0; // Assegna 0 se non ci sono dati
   });
 
-  // Draw map
+  // Crea la mappa
+  createChoroplethMap(geoData);
+}).catch(error => {
+  console.error("Errore durante il caricamento dei dati:", error);
+});
+
+// Funzione per creare la mappa coropletica
+function createChoroplethMap(geoData) {
+  const width = 960;
+  const height = 500;
+
+  // Configura il colore
+  const colorScale = d3.scaleSequential(d3.interpolateReds)
+    .domain([0, d3.max(geoData.features, d => d.properties.emissions)]);
+
+  // Crea un elemento SVG
+  const svg = d3.select("#map").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  // Proiezione geografica
+  const projection = d3.geoNaturalEarth1()
+    .fitSize([width, height], geoData);
+
+  const path = d3.geoPath().projection(projection);
+
+  // Tooltip per mostrare i dati
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background-color", "white")
+    .style("border", "1px solid black")
+    .style("border-radius", "5px")
+    .style("padding", "5px");
+
+  // Disegna i paesi
   svg.selectAll("path")
-    .data(geoJson.features)
-    .enter().append("path")
+    .data(geoData.features)
+    .join("path")
     .attr("d", path)
-    .attr("fill", d => colorScale(d.properties.emissions))
-    .attr("stroke", "#999")
-    .on("mouseover", (event, d) => {
-      const tooltip = d3.select("#tooltip");
-      tooltip.style("visibility", "visible")
-        .text(`${d.properties.name}: ${d.properties.emissions || 'No Data'} t CO₂/cap`);
+    .attr("fill", d => {
+      const emissions = d.properties.emissions;
+      return emissions ? colorScale(emissions) : "#ccc"; // Grigio per paesi senza dati
     })
-    .on("mousemove", (event) => {
-      d3.select("#tooltip")
-        .style("top", `${event.pageY + 10}px`)
-        .style("left", `${event.pageX + 10}px`);
+    .attr("stroke", "#333")
+    .on("mouseover", (event, d) => {
+      tooltip.style("visibility", "visible")
+        .text(`${d.properties.name}: ${d.properties.emissions || "No Data"} t CO₂/cap`);
+    })
+    .on("mousemove", event => {
+      tooltip.style("top", (event.pageY + 5) + "px")
+        .style("left", (event.pageX + 5) + "px");
     })
     .on("mouseout", () => {
-      d3.select("#tooltip").style("visibility", "hidden");
+      tooltip.style("visibility", "hidden");
     });
-}).catch(error => console.error("Error loading data:", error));
+}
