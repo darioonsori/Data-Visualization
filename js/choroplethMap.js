@@ -1,47 +1,50 @@
-// Carica i dati GeoJSON e CSV
 Promise.all([
-  d3.json("data/custom.geo.json"), // Path al tuo GeoJSON
-  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // Path al tuo CSV
+  d3.json("data/custom.geo.json"), // Path al GeoJSON
+  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // Path al CSV
 ]).then(([geoData, csvData]) => {
-  // Trasforma i dati CSV in un oggetto per un accesso più rapido
   const emissionsData = {};
   csvData.forEach(row => {
-    emissionsData[row.Country] = +row["2018"]; // Assumi che la colonna per il 2018 sia etichettata "2018"
+    emissionsData[row.Country] = +row["2018"]; // Assumi che "2018" sia la colonna corretta
   });
 
-  // Aggiungi il valore di emissioni per ciascun paese nel GeoJSON
+  // Normalizza i nomi dei paesi
+  const countryNameMap = {
+    "United States of America": "United States",
+    "Russian Federation": "Russia",
+    "Czech Republic": "Czechia"
+    // Aggiungi altre corrispondenze necessarie
+  };
+
   geoData.features.forEach(feature => {
-    const countryName = feature.properties.name; // Nome del paese dal GeoJSON
-    feature.properties.emissions = emissionsData[countryName] || 0; // Assegna 0 se non ci sono dati
+    const countryName = countryNameMap[feature.properties.name] || feature.properties.name;
+    feature.properties.emissions = emissionsData[countryName] || 0;
+
+    if (!emissionsData[countryName]) {
+      console.log("No data for country:", countryName); // Debug
+    }
   });
 
-  // Crea la mappa
   createChoroplethMap(geoData);
 }).catch(error => {
   console.error("Errore durante il caricamento dei dati:", error);
 });
 
-// Funzione per creare la mappa coropletica
 function createChoroplethMap(geoData) {
   const width = 960;
   const height = 500;
 
-  // Configura il colore
   const colorScale = d3.scaleSequential(d3.interpolateReds)
     .domain([0, d3.max(geoData.features, d => d.properties.emissions)]);
 
-  // Crea un elemento SVG
   const svg = d3.select("#map").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-  // Proiezione geografica
   const projection = d3.geoNaturalEarth1()
     .fitSize([width, height], geoData);
 
   const path = d3.geoPath().projection(projection);
 
-  // Tooltip per mostrare i dati
   const tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("position", "absolute")
@@ -51,7 +54,6 @@ function createChoroplethMap(geoData) {
     .style("border-radius", "5px")
     .style("padding", "5px");
 
-  // Disegna i paesi
   svg.selectAll("path")
     .data(geoData.features)
     .join("path")
