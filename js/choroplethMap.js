@@ -5,10 +5,13 @@ d3.json("data/custom.geo.json").then(function (geojson) {
     csvData.forEach(row => {
       dataByCode[row.Code] = +row["2018"]; // Assuming "2018" is the column for emissions
     });
-
+  
     // Add emission data to GeoJSON features
     geojson.features.forEach(feature => {
       const isoCode = feature.properties.iso_a3;
+      if (!dataByCode[isoCode]) {
+        console.warn(`No data for country: ${feature.properties.name} (${isoCode})`);
+      }
       feature.properties.emissions = dataByCode[isoCode] || null; // Null if no data
     });
 
@@ -35,7 +38,7 @@ d3.json("data/custom.geo.json").then(function (geojson) {
       .on("mouseover", function (event, d) {
         const tooltip = d3.select("#tooltip");
         tooltip.style("visibility", "visible")
-          .text(`${d.properties.name}: ${d.properties.emissions || "No data"}`);
+          .text(`${d.properties.name}: ${d.properties.emissions !== null ? d.properties.emissions : "No data"}`);
       })
       .on("mousemove", function (event) {
         const tooltip = d3.select("#tooltip");
@@ -56,4 +59,6 @@ d3.json("data/custom.geo.json").then(function (geojson) {
       .style("border-radius", "5px")
       .style("visibility", "hidden");
   });
+  console.log("GeoJSON ISO codes:", geojson.features.map(f => f.properties.iso_a3));
+console.log("CSV ISO codes:", csvData.map(row => row.Code));
 });
