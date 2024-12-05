@@ -112,7 +112,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    console.log("Filtered Chart Data:", chartData);
 
     // Create the alluvial chart
     createAlluvialChart(chartData);
