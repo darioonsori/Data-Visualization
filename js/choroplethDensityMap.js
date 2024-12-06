@@ -1,10 +1,10 @@
 // Set the dimensions and margins of the map
 const width2 = 960, height2 = 600;
 
-const svg = d3.select("#density-map")
-  .append("svg")
-  .attr("width", width2)
-  .attr("height", height2);
+const svg2 = d3.select("#density-map")
+  .append("svg2")
+  .attr("width2", width2)
+  .attr("height2", height2);
 
 // Define projection and path generator
 const projection = d3.geoMercator()
