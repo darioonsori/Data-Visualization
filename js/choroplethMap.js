@@ -1,3 +1,14 @@
+// Imposta le dimensioni della mappa
+const width = 960;
+const height = 600;
+
+// Crea l'elemento SVG
+const svg = d3.select("#map")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// Carica i dati GeoJSON e CSV
 Promise.all([
   d3.json("data/all.geojson"),
   d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv")
@@ -5,7 +16,9 @@ Promise.all([
   // Mappa delle emissioni
   const emissionData = new Map();
   csvData.forEach(d => {
-    emissionData.set(d.Code, +d['Annual CO₂ emissions (per capita)']);
+    if (d.Code && d.Code !== "-99" && !d.Code.startsWith("OWID")) {
+      emissionData.set(d.Code, +d['Annual CO₂ emissions (per capita)']);
+    }
   });
 
   // Filtra i codici validi
@@ -51,10 +64,15 @@ Promise.all([
       d3.select("#tooltip").style("visibility", "hidden");
     });
 
-  // Legenda (rimane invariata)
+  // Aggiungi una legenda
+  const legendWidth = 300;
+  const legendHeight = 10;
+
   const legendScale = d3.scaleLog()
     .domain([1, maxEmission])
-    .range([0, 300]);
+    .range([0, legendWidth]);
+
+  const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
 
   const legend = svg.append("g")
     .attr("transform", `translate(20, ${height - 40})`);
@@ -66,12 +84,12 @@ Promise.all([
     .enter().append("rect")
     .attr("x", d => legendScale(d))
     .attr("width", 300 / legendData.length)
-    .attr("height", 10)
+    .attr("height", legendHeight)
     .style("fill", d => colorScale(d));
 
   legend.append("g")
-    .attr("transform", "translate(0, 10)")
-    .call(d3.axisBottom(legendScale).ticks(5, ".0f"));
+    .attr("transform", `translate(0, ${legendHeight})`)
+    .call(legendAxis);
 }).catch(error => {
   console.error("Errore nel caricamento dei dati:", error);
 });
