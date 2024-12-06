@@ -10,20 +10,15 @@ const svg = d3.select("#map")
 
 // Carica i dati GeoJSON e CSV
 Promise.all([
-  d3.json("data/all.geojson"), // Cambia "path/to" con il percorso reale del file GeoJSON
-  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // Cambia "path/to" con il percorso reale del file CSV
+  d3.json("data/all.geojson"), // File GeoJSON
+  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // File CSV
 ]).then(([geoData, csvData]) => {
-  // Debug: log dei dati caricati
-  console.log("GeoJSON Data:", geoData);
-  console.log("CSV Data:", csvData);
-
-  // Crea un dizionario per mappare i dati di emissione
+  // Mappa delle emissioni con debug dei codici mancanti
   const emissionData = new Map();
   csvData.forEach(d => {
     emissionData.set(d.Code, +d['Annual CO₂ emissions (per capita)']);
   });
 
-  // Debug: verifica i codici ISO nel CSV e nel GeoJSON
   const geoCodes = geoData.features.map(d => d.properties.ISO_A3);
   const csvCodes = Array.from(emissionData.keys());
   const missingInCsv = geoCodes.filter(code => !csvCodes.includes(code));
@@ -32,14 +27,11 @@ Promise.all([
   console.log("Codici mancanti nel CSV:", missingInCsv);
   console.log("Codici mancanti nel GeoJSON:", missingInGeo);
 
-  // Calcola il massimo valore di emissione
+  // Calibra il massimo valore di emissione
   const maxEmission = d3.max(csvData, d => +d['Annual CO₂ emissions (per capita)']);
-  console.log("Massimo valore di emissione:", maxEmission);
-
-  // Crea una scala di colori
-  const colorScale = d3.scaleQuantize()
-    .domain([0, maxEmission]) // Intervallo di valori
-    .range(d3.schemeReds[9]); // Scala discreta con 9 livelli di colore
+  const colorScale = d3.scaleLog() // Usa una scala logaritmica
+    .domain([1, maxEmission])
+    .range(["#ffffff", "#800026"]);
 
   // Disegna i paesi
   svg.selectAll("path")
@@ -51,7 +43,7 @@ Promise.all([
       if (!emission) {
         console.log(`Dati mancanti per: ${d.properties.NAME} (${d.properties.ISO_A3})`);
       }
-      return emission ? colorScale(emission) : "#ccc"; // Grigio per dati mancanti
+      return emission ? colorScale(emission) : "#ccc";
     })
     .attr("stroke", "#333")
     .on("mouseover", (event, d) => {
@@ -69,16 +61,10 @@ Promise.all([
       d3.select("#tooltip").style("visibility", "hidden");
     });
 
-  // Aggiungi una legenda per la scala di colori
-  const legendWidth = 300;
-  const legendHeight = 10;
-
-  const legendScale = d3.scaleLinear()
-    .domain([0, maxEmission])
-    .range([0, legendWidth]);
-
-  const legendAxis = d3.axisBottom(legendScale)
-    .ticks(5);
+  // Aggiungi una legenda
+  const legendScale = d3.scaleLog()
+    .domain([1, maxEmission])
+    .range([0, 300]);
 
   const legend = svg.append("g")
     .attr("transform", `translate(20, ${height - 40})`);
@@ -93,12 +79,12 @@ Promise.all([
     .enter().append("rect")
     .attr("x", d => legendScale(d[0]))
     .attr("width", d => legendScale(d[1]) - legendScale(d[0]))
-    .attr("height", legendHeight)
+    .attr("height", 10)
     .style("fill", d => colorScale(d[0]));
 
   legend.append("g")
-    .attr("transform", `translate(0, ${legendHeight})`)
-    .call(legendAxis);
+    .attr("transform", "translate(0, 10)")
+    .call(d3.axisBottom(legendScale).ticks(5));
 }).catch(error => {
   console.error("Errore nel caricamento dei dati:", error);
 });
