@@ -1,5 +1,4 @@
 (() => {
-  // Creazione della mappa di densità delle emissioni
   const width = 960;
   const height = 600;
 
@@ -29,17 +28,23 @@
     d3.csv("data/land.csv"),
     d3.csv("data/annual-co2-emissions-per-country.csv")
   ]).then(([geoData, landData, emissionsData]) => {
+    console.log("GeoJSON data:", geoData);
+    console.log("Land data:", landData);
+    console.log("Emissions data:", emissionsData);
+
     const landMap = new Map();
     landData.forEach(d => {
-      landMap.set(d["Country Code"], +d["2022"]); // Modifica se necessario
+      landMap.set(d["Country Code"], +d["2022"]);
     });
+    console.log("Mapped land data:", landMap);
 
     const emissionMap = new Map();
     emissionsData.forEach(d => {
-      if (d.Year === "2022") {
+      if (d.Year === "2018") {
         emissionMap.set(d.Code, +d["Annual CO₂ emissions (per capita)"]);
       }
     });
+    console.log("Mapped emission data:", emissionMap);
 
     const densityData = new Map();
     geoData.features.forEach(feature => {
@@ -48,11 +53,16 @@
       const emissionValue = emissionMap.get(countryCode);
 
       if (landArea && emissionValue) {
-        densityData.set(countryCode, emissionValue / landArea);
+        const density = emissionValue / landArea;
+        densityData.set(countryCode, density);
+        console.log(`Country: ${countryCode}, Land Area: ${landArea}, Emission: ${emissionValue}, Density: ${density}`);
+      } else {
+        console.log(`Missing data for country: ${countryCode}, Land Area: ${landArea}, Emission: ${emissionValue}`);
       }
     });
 
     const densityExtent = d3.extent(Array.from(densityData.values()));
+    console.log("Density extent:", densityExtent);
 
     const colorScale = d3.scaleSequential()
       .domain(densityExtent)
