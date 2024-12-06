@@ -1,108 +1,95 @@
-// Set the dimensions and margins of the map
-const width2 = 960, height2 = 600;
+(() => {
+  // Creazione della mappa di densità delle emissioni
+  const width = 960;
+  const height = 600;
 
-const svg2 = d3.select("#density-map")
-  .append("svg2")
-  .attr("width2", width2)
-  .attr("height2", height2);
+  const svg = d3.select("#density-map")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-// Define projection and path generator
-const projection = d3.geoMercator()
-  .scale(150)
-  .translate([width / 2, height / 1.5]);
-const path = d3.geoPath().projection(projection);
+  const projection = d3.geoNaturalEarth1()
+    .scale(160)
+    .translate([width / 2, height / 2]);
 
-// Define the color scale
-const colorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, 30]);
+  const path = d3.geoPath().projection(projection);
 
-// Tooltip
-const tooltip = d3.select("body").append("div")
-  .attr("class", "tooltip")
-  .style("visibility", "hidden");
+  const densityTooltip = d3.select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background-color", "white")
+    .style("border", "1px solid black")
+    .style("border-radius", "5px")
+    .style("padding", "5px");
 
-// Load the data
-Promise.all([
-  d3.json("data/all.geojson"),
-  d3.csv("data/land.csv"),
-  d3.csv("data/annual-co2-emissions-per-country.csv")
-]).then(([geojson, landData, co2Data]) => {
-  // Map data structures for easy access
-  const landMap = new Map();
-  landData.forEach(d => {
-    landMap.set(d["Country Code"], +d["2018"]); // Extract area for 2018
-  });
+  Promise.all([
+    d3.json("data/all.geojson"),
+    d3.csv("data/land.csv"),
+    d3.csv("data/annual-co2-emissions-per-country.csv")
+  ]).then(([geoData, landData, emissionsData]) => {
+    const landMap = new Map();
+    landData.forEach(d => {
+      landMap.set(d["Country Code"], +d["2022"]); // Modifica se necessario
+    });
 
-  const densityMap = new Map();
-  co2Data.forEach(d => {
-    if (d.Year === "2018") {
-      densityMap.set(d.Code, +d["Annual CO₂ emissions (per capita)"]);
-    }
-  });
-
-  // Bind data to the GeoJSON
-  svg.selectAll("path")
-    .data(geojson.features)
-    .enter()
-    .append("path")
-    .attr("d", path)
-    .attr("fill", d => {
-      const code = d.properties.ISO_A3;
-      const area = landMap.get(code);
-      const emissions = densityMap.get(code);
-      if (!area || !emissions) {
-        console.warn(`Missing data for country: ${d.properties.ADMIN}, Code: ${code}`);
-        return "#ccc"; // Default color for missing data
+    const emissionMap = new Map();
+    emissionsData.forEach(d => {
+      if (d.Year === "2022") {
+        emissionMap.set(d.Code, +d["Annual CO₂ emissions (per capita)"]);
       }
-      const density = emissions / area;
-      return colorScale(density);
-    })
-    .attr("stroke", "#333")
-    .attr("stroke-width", 0.5)
-    .on("mouseover", (event, d) => {
-      const code = d.properties.ISO_A3;
-      const country = d.properties.ADMIN;
-      const area = landMap.get(code);
-      const emissions = densityMap.get(code);
-      const density = emissions && area ? emissions / area : null;
+    });
 
-      tooltip.style("visibility", "visible")
-        .html(`
-          <strong>${country}</strong><br>
-          Total Emissions Density: ${density ? density.toFixed(2) : "No data"}<br>
-          Total Emissions: ${emissions ? emissions.toFixed(2) : "No data"}<br>
-          Area: ${area ? area.toFixed(2) : "No data"} km²
-        `);
-    })
-    .on("mousemove", event => {
-      tooltip.style("top", (event.pageY + 10) + "px")
-        .style("left", (event.pageX + 10) + "px");
-    })
-    .on("mouseout", () => tooltip.style("visibility", "hidden"));
+    const densityData = new Map();
+    geoData.features.forEach(feature => {
+      const countryCode = feature.properties.ISO_A3;
+      const landArea = landMap.get(countryCode);
+      const emissionValue = emissionMap.get(countryCode);
 
-  // Add a legend
-  const legendWidth = 300, legendHeight = 10;
-  const legendSvg = svg.append("g")
-    .attr("transform", `translate(${width - legendWidth - 20}, ${height - 40})`);
+      if (landArea && emissionValue) {
+        densityData.set(countryCode, emissionValue / landArea);
+      }
+    });
 
-  const legendScale = d3.scaleLinear()
-    .domain(colorScale.domain())
-    .range([0, legendWidth]);
+    const densityExtent = d3.extent(Array.from(densityData.values()));
 
-  const legendAxis = d3.axisBottom(legendScale)
-    .ticks(5)
-    .tickSize(-legendHeight);
+    const colorScale = d3.scaleSequential()
+      .domain(densityExtent)
+      .interpolator(d3.interpolateReds);
 
-  legendSvg.selectAll("rect")
-    .data(d3.range(0, 1, 1 / legendWidth))
-    .enter().append("rect")
-    .attr("x", (d, i) => i)
-    .attr("y", 0)
-    .attr("width", 1)
-    .attr("height", legendHeight)
-    .attr("fill", d => colorScale(d * colorScale.domain()[1]));
+    svg.selectAll("path")
+      .data(geoData.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("fill", d => {
+        const countryCode = d.properties.ISO_A3;
+        const density = densityData.get(countryCode);
+        return density ? colorScale(density) : "#ccc";
+      })
+      .attr("stroke", "#333")
+      .attr("stroke-width", 0.5)
+      .on("mouseover", (event, d) => {
+        const countryName = d.properties.ADMIN;
+        const countryCode = d.properties.ISO_A3;
+        const density = densityData.get(countryCode);
 
-  legendSvg.append("g")
-    .attr("transform", `translate(0, ${legendHeight})`)
-    .call(legendAxis)
-    .select(".domain").remove();
-}).catch(error => console.error("Error loading or processing data:", error));
+        densityTooltip.style("visibility", "visible")
+          .html(`
+            <strong>${countryName}</strong><br>
+            Total Emissions Density: ${density ? density.toFixed(2) : "N/A"}
+          `);
+      })
+      .on("mousemove", (event) => {
+        densityTooltip
+          .style("top", (event.pageY + 15) + "px")
+          .style("left", (event.pageX + 15) + "px");
+      })
+      .on("mouseout", () => {
+        densityTooltip.style("visibility", "hidden");
+      });
+  }).catch(error => {
+    console.error("Error loading data:", error);
+  });
+})();
