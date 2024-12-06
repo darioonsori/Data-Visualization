@@ -1,50 +1,38 @@
-// Imposta le dimensioni della mappa
-const width = 960;
-const height = 600;
-
-// Crea l'elemento SVG
-const svg = d3.select("#map")
-  .append("svg")
-  .attr("width", width)
-  .attr("height", height);
-
-// Carica i dati GeoJSON e CSV
 Promise.all([
-  d3.json("data/all.geojson"), // File GeoJSON
-  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // File CSV
+  d3.json("data/all.geojson"),
+  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv")
 ]).then(([geoData, csvData]) => {
-  // Mappa delle emissioni con debug dei codici mancanti
+  // Mappa delle emissioni
   const emissionData = new Map();
   csvData.forEach(d => {
     emissionData.set(d.Code, +d['Annual CO₂ emissions (per capita)']);
   });
 
+  // Filtra i codici validi
   const geoCodes = geoData.features.map(d => d.properties.ISO_A3);
   const csvCodes = Array.from(emissionData.keys());
-  const missingInCsv = geoCodes.filter(code => !csvCodes.includes(code));
-  const missingInGeo = csvCodes.filter(code => !geoCodes.includes(code));
+  const validGeoCodes = geoCodes.filter(code => code !== '-99' && emissionData.has(code));
+  const validCsvCodes = csvCodes.filter(code => geoCodes.includes(code));
 
-  console.log("Codici mancanti nel CSV:", missingInCsv);
-  console.log("Codici mancanti nel GeoJSON:", missingInGeo);
+  // Debug: codici mancanti dopo il filtro
+  const missingInCsv = geoCodes.filter(code => !validCsvCodes.includes(code));
+  const missingInGeo = csvCodes.filter(code => !validGeoCodes.includes(code));
 
-  // Filtra i codici non validi
-  const validGeoCodes = geoCodes.filter(code => code !== '-99' && !code.startsWith('OWID'));
+  console.log("Codici mancanti nel CSV (dopo filtro):", missingInCsv);
+  console.log("Codici mancanti nel GeoJSON (dopo filtro):", missingInGeo);
 
   // Calibra il massimo valore di emissione
-  const maxEmission = d3.max(csvData, d => +d['Annual CO₂ emissions (per capita)']);
+  const maxEmission = d3.max(validCsvCodes.map(code => emissionData.get(code)));
   const colorScale = d3.scaleSequentialLog(d3.interpolateReds)
     .domain([1, maxEmission]);
 
   // Disegna i paesi
   svg.selectAll("path")
-    .data(geoData.features)
+    .data(geoData.features.filter(d => validGeoCodes.includes(d.properties.ISO_A3)))
     .enter().append("path")
     .attr("d", d3.geoPath().projection(d3.geoMercator().fitSize([width, height], geoData)))
     .attr("fill", d => {
       const emission = emissionData.get(d.properties.ISO_A3);
-      if (!emission) {
-        console.log(`Dati mancanti per: ${d.properties.NAME} (${d.properties.ISO_A3})`);
-      }
       return emission ? colorScale(emission) : "#ccc";
     })
     .attr("stroke", "#333")
@@ -63,15 +51,10 @@ Promise.all([
       d3.select("#tooltip").style("visibility", "hidden");
     });
 
-  // Aggiungi una legenda
-  const legendWidth = 300;
-  const legendHeight = 10;
-
+  // Legenda (rimane invariata)
   const legendScale = d3.scaleLog()
     .domain([1, maxEmission])
-    .range([0, legendWidth]);
-
-  const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
+    .range([0, 300]);
 
   const legend = svg.append("g")
     .attr("transform", `translate(20, ${height - 40})`);
@@ -82,13 +65,13 @@ Promise.all([
     .data(legendData)
     .enter().append("rect")
     .attr("x", d => legendScale(d))
-    .attr("width", legendWidth / legendData.length)
-    .attr("height", legendHeight)
+    .attr("width", 300 / legendData.length)
+    .attr("height", 10)
     .style("fill", d => colorScale(d));
 
   legend.append("g")
-    .attr("transform", `translate(0, ${legendHeight})`)
-    .call(legendAxis);
+    .attr("transform", "translate(0, 10)")
+    .call(d3.axisBottom(legendScale).ticks(5, ".0f"));
 }).catch(error => {
   console.error("Errore nel caricamento dei dati:", error);
 });
