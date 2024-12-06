@@ -139,12 +139,21 @@
   <div id="tooltip"
     style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 5px; font-size: 12px; pointer-events: none;">
   </div>
-
+  
+  <!-- Choropleth Map 1 -->
   <section id="choropleth-map">
   <h3>Choropleth Map of CO₂ Emissions per Capita</h3>
   <p>This map displays CO₂ emissions per capita for the year 2018.</p>
   <div id="map"></div>
   </section>
+
+  <!-- Choropleth Map 2 -->
+  <section id="choropleth-map-2">
+    <h3>Choropleth Map of CO₂ Emissions Densities</h3>
+    <p>This map displays CO₂ emissions densities (total emissions per unit area).</p>
+    <div id="density-map"></div>
+  </section>
+
 
 
   <!-- Link to JavaScript files -->
@@ -155,6 +164,7 @@
   <script src="js/heatmap.js"></script>
   <script src="js/alluvialPlot.js"></script>
   <script src="js/choroplethMap.js"></script>
+  <script src="js/choroplethDensityMap.js"></script>
 </body>
 
 </html>
