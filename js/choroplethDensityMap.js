@@ -1,15 +1,15 @@
 // Import the necessary files
 Promise.all([
-  d3.json("data/all.geojson"), // GeoJSON file with country polygons and areas
-  d3.csv("data/land.csv"),              // CSV file with surface area data
+  d3.json("data/all.geojson"), // GeoJSON file without area data
+  d3.csv("data/land.csv"),     // CSV file with surface area data
   d3.csv("data/annual-co2-emissions-per-country.csv") // CSV file with CO2 emissions data
 ]).then(function ([geojson, landData, co2Data]) {
   // Prepare the container
-  const widthDensity = 1000, height = 600;
-  const svgDensity = d3.select("#density-map")
+  const widthDensity = 1000, heightDensity = 600;
+  const svg = d3.select("#density-map")
     .append("svg")
-    .attr("width", widthDensity)
-    .attr("height", svgDensity);
+    .attr("width", width)
+    .attr("height", height);
 
   // Set up the projection and path generator
   const projection = d3.geoNaturalEarth1()
@@ -68,7 +68,7 @@ Promise.all([
       tooltip.style("visibility", "visible")
         .style("left", (event.pageX + 10) + "px")
         .style("top", (event.pageY + 10) + "px")
-        .html(`<strong>${country}</strong><br>Density: ${density ? density.toFixed(2) : "N/A"}`);
+        .html(`<strong>${country}</strong><br>Total Emissions Density: ${density ? density.toFixed(2) : "N/A"}`);
     })
     .on("mousemove", function (event) {
       tooltip.style("left", (event.pageX + 10) + "px")
