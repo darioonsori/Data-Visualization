@@ -1,51 +1,44 @@
 (() => {
-  const width = 960;
-  const height = 600;
-
-  const svg = d3.select("#density-map")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-  const projection = d3.geoNaturalEarth1()
-    .scale(160)
-    .translate([width / 2, height / 2]);
-
-  const path = d3.geoPath().projection(projection);
-
-  const densityTooltip = d3.select("body")
-    .append("div")
-    .attr("class", "tooltip")
-    .style("position", "absolute")
-    .style("visibility", "hidden")
-    .style("background-color", "white")
-    .style("border", "1px solid black")
-    .style("border-radius", "5px")
-    .style("padding", "5px");
-
+  // Caricamento dei file necessari
   Promise.all([
-    d3.json("data/all.geojson"),
-    d3.csv("data/land.csv"),
-    d3.csv("data/annual-co2-emissions-per-country.csv")
+    d3.json("data/all.geojson"), // GeoJSON
+    d3.csv("data/land.csv"), // Superficie
+    d3.csv("data/annual-co2-emissions-per-country.csv") // Emissioni
   ]).then(([geoData, landData, emissionsData]) => {
     console.log("GeoJSON data:", geoData);
     console.log("Land data:", landData);
     console.log("Emissions data:", emissionsData);
 
+    // Mappa per superficie e emissioni
     const landMap = new Map();
+    const emissionMap = new Map();
+
+    // Parsing land.csv
     landData.forEach(d => {
-      landMap.set(d["Country Code"], +d["2022"]);
+      const code = d["Country Code"];
+      const area = +d["2018"]; // Assicurati che '2018' sia la colonna corretta
+      if (code && !isNaN(area)) {
+        landMap.set(code, area);
+      } else {
+        console.log(`Invalid land data: Code=${code}, Area=${area}`);
+      }
     });
     console.log("Mapped land data:", landMap);
 
-    const emissionMap = new Map();
+    // Parsing annual-co2-emissions-per-country.csv
     emissionsData.forEach(d => {
-      if (d.Year === "2018") {
-        emissionMap.set(d.Code, +d["Annual CO₂ emissions (per capita)"]);
+      const code = d.Code;
+      const year = +d.Year;
+      const emission = +d["Annual CO₂ emissions (per capita)"];
+      if (code && year === 2018 && !isNaN(emission)) {
+        emissionMap.set(code, emission);
+      } else {
+        console.log(`Invalid emission data: Code=${code}, Year=${year}, Emission=${emission}`);
       }
     });
     console.log("Mapped emission data:", emissionMap);
 
+    // Calcolo densità
     const densityData = new Map();
     geoData.features.forEach(feature => {
       const countryCode = feature.properties.ISO_A3;
@@ -55,20 +48,57 @@
       if (landArea && emissionValue) {
         const density = emissionValue / landArea;
         densityData.set(countryCode, density);
-        console.log(`Country: ${countryCode}, Land Area: ${landArea}, Emission: ${emissionValue}, Density: ${density}`);
       } else {
-        console.log(`Missing data for country: ${countryCode}, Land Area: ${landArea}, Emission: ${emissionValue}`);
+        console.warn(
+          `Missing data for country: ${countryCode}, Land Area: ${landArea}, Emission: ${emissionValue}`
+        );
       }
     });
 
-    const densityExtent = d3.extent(Array.from(densityData.values()));
+    console.log("Density data:", densityData);
+
+    // Estensione delle densità per la scala di colori
+    const densityExtent = d3.extent([...densityData.values()]);
     console.log("Density extent:", densityExtent);
 
-    const colorScale = d3.scaleSequential()
-      .domain(densityExtent)
-      .interpolator(d3.interpolateReds);
+    // Configurazione del colore
+    const colorScale = d3
+      .scaleLinear()
+      .domain([0, densityExtent[1]])
+      .range(["white", "darkred"]);
 
-    svg.selectAll("path")
+    // Creazione della mappa
+    const width = 960;
+    const height = 500;
+
+    const svg = d3
+      .select("#density-map")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const projection = d3
+      .geoMercator()
+      .scale(130)
+      .translate([width / 2, height / 1.5]);
+
+    const path = d3.geoPath().projection(projection);
+
+    // Tooltip
+    const tooltip = d3
+      .select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background-color", "white")
+      .style("border", "1px solid black")
+      .style("border-radius", "5px")
+      .style("padding", "5px");
+
+    // Disegno delle feature
+    svg
+      .selectAll("path")
       .data(geoData.features)
       .enter()
       .append("path")
@@ -78,28 +108,56 @@
         const density = densityData.get(countryCode);
         return density ? colorScale(density) : "#ccc";
       })
-      .attr("stroke", "#333")
-      .attr("stroke-width", 0.5)
-      .on("mouseover", (event, d) => {
-        const countryName = d.properties.ADMIN;
+      .attr("stroke", "black")
+      .on("mouseover", function (event, d) {
         const countryCode = d.properties.ISO_A3;
         const density = densityData.get(countryCode);
-
-        densityTooltip.style("visibility", "visible")
-          .html(`
-            <strong>${countryName}</strong><br>
-            Total Emissions Density: ${density ? density.toFixed(2) : "N/A"}
-          `);
+        tooltip
+          .style("visibility", "visible")
+          .html(
+            `Country: ${d.properties.ADMIN}<br>Total Emissions Density: ${
+              density ? density.toFixed(2) : "N/A"
+            }`
+          );
       })
-      .on("mousemove", (event) => {
-        densityTooltip
-          .style("top", (event.pageY + 15) + "px")
-          .style("left", (event.pageX + 15) + "px");
+      .on("mousemove", function (event) {
+        tooltip
+          .style("top", event.pageY + 10 + "px")
+          .style("left", event.pageX + 10 + "px");
       })
-      .on("mouseout", () => {
-        densityTooltip.style("visibility", "hidden");
+      .on("mouseout", function () {
+        tooltip.style("visibility", "hidden");
       });
-  }).catch(error => {
-    console.error("Error loading data:", error);
+
+    // Legenda
+    const legendWidth = 300;
+    const legendHeight = 10;
+
+    const legendSvg = svg
+      .append("g")
+      .attr("transform", `translate(${width / 2 - legendWidth / 2}, ${height - 30})`);
+
+    const legendScale = d3
+      .scaleLinear()
+      .domain(colorScale.domain())
+      .range([0, legendWidth]);
+
+    const legendAxis = d3.axisBottom(legendScale).ticks(5);
+
+    legendSvg
+      .selectAll("rect")
+      .data(d3.range(legendWidth))
+      .enter()
+      .append("rect")
+      .attr("x", d => d)
+      .attr("y", 0)
+      .attr("width", 1)
+      .attr("height", legendHeight)
+      .attr("fill", d => colorScale(legendScale.invert(d)));
+
+    legendSvg
+      .append("g")
+      .attr("transform", `translate(0, ${legendHeight})`)
+      .call(legendAxis);
   });
 })();
