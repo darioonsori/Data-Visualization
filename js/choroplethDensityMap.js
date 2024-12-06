@@ -2,7 +2,6 @@
   const width = 960;
   const height = 600;
 
-  // Create the SVG container for the map
   const svg = d3.select("#density-map")
     .append("svg")
     .attr("width", width)
@@ -18,50 +17,44 @@
     console.log("GeoJSON Data:", geoData);
     console.log("CSV Data:", csvData);
 
-    // Check if AREA is present in GeoJSON
     if (!geoData.features[0].properties.AREA) {
       console.error("GeoJSON does not have an AREA property. Please verify the file.");
       return;
     }
 
-    // Map density data to a dictionary
     const densityData = new Map();
     csvData.forEach(d => {
       if (d.Code && d.Code !== "-99" && !d.Code.startsWith("OWID")) {
         const feature = geoData.features.find(g => g.properties.ISO_A3 === d.Code);
-        const area = feature?.properties.AREA;
-        if (area) {
-          const density = +d['Annual CO₂ emissions (per capita)'] / area; // Density = Emissions / Area
-          densityData.set(d.Code, density);
+        const area = feature?.properties.AREA || 1; // Fallback to 1 if area is missing
+        const density = +d['Annual CO₂ emissions (per capita)'] / area;
+        if (isNaN(density)) {
+          console.warn(`NaN detected for Code: ${d.Code}, Area: ${area}, Emissions: ${d['Annual CO₂ emissions (per capita)']}`);
         }
+        densityData.set(d.Code, density);
       }
     });
 
     console.log("Processed Density Data:", densityData);
 
-    // Extract country codes from GeoJSON and CSV
     const geoCodes = geoData.features.map(d => d.properties.ISO_A3);
     const csvCodes = Array.from(densityData.keys());
 
-    // Filter valid codes
     const validGeoCodes = geoCodes.filter(code => code !== '-99' && densityData.has(code));
     const validCsvCodes = csvCodes.filter(code => geoCodes.includes(code));
 
     console.log("Valid GeoJSON Codes:", validGeoCodes);
     console.log("Valid CSV Codes:", validCsvCodes);
 
-    // Calculate the maximum value of density and adjust the range
     const maxDensity = d3.max(validCsvCodes.map(code => densityData.get(code)));
     const adjustedMax = Math.ceil(maxDensity / 10) * 10;
 
     console.log("Max Density Value:", maxDensity);
     console.log("Adjusted Max Density:", adjustedMax);
 
-    // Define the color scale using a logarithmic scale
     const colorScale = d3.scaleSequentialLog(d3.interpolateReds)
-      .domain([1, adjustedMax]);
+      .domain([0.001, adjustedMax]); // Adjusted scale for small densities
 
-    // Draw the map using GeoJSON data
     const featuresToDraw = geoData.features.filter(d => validGeoCodes.includes(d.properties.ISO_A3));
     console.log("Features to Draw:", featuresToDraw);
 
@@ -71,7 +64,7 @@
       .attr("d", d3.geoPath().projection(d3.geoMercator().fitSize([width, height], geoData)))
       .attr("fill", d => {
         const density = densityData.get(d.properties.ISO_A3);
-        return density ? colorScale(density) : "#ccc"; // Grey for missing data
+        return density ? colorScale(density) : "#ccc";
       })
       .attr("stroke", "#333")
       .on("mouseover", (event, d) => {
@@ -89,12 +82,11 @@
         d3.select("#tooltip").style("visibility", "hidden");
       });
 
-    // Add a legend for the color scale
     const legendWidth = 300;
     const legendHeight = 10;
 
     const legendScale = d3.scaleLog()
-      .domain([1, adjustedMax])
+      .domain([0.001, adjustedMax])
       .range([0, legendWidth]);
 
     const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
@@ -102,7 +94,7 @@
     const legend = svg.append("g")
       .attr("transform", `translate(20, ${height - 40})`);
 
-    const legendData = d3.range(1, adjustedMax, (adjustedMax - 1) / 9);
+    const legendData = d3.range(0.001, adjustedMax, (adjustedMax - 0.001) / 9);
 
     legend.selectAll("rect")
       .data(legendData)
