@@ -34,10 +34,13 @@ Promise.all([
   console.log("Codici mancanti nel CSV (dopo filtro):", missingInCsv);
   console.log("Codici mancanti nel GeoJSON (dopo filtro):", missingInGeo);
 
-  // Calibra il massimo valore di emissione
+  // Calcola il massimo valore di emissione e lo aggiusta
   const maxEmission = d3.max(validCsvCodes.map(code => emissionData.get(code)));
+  const adjustedMax = Math.ceil(maxEmission / 10) * 10; // Arrotonda a multipli di 10
+
+  // Scala dei colori
   const colorScale = d3.scaleSequentialLog(d3.interpolateReds)
-    .domain([1, maxEmission]);
+    .domain([1, adjustedMax]);
 
   // Disegna i paesi
   svg.selectAll("path")
@@ -64,12 +67,12 @@ Promise.all([
       d3.select("#tooltip").style("visibility", "hidden");
     });
 
-  // Aggiungi una legenda
+  // Legenda
   const legendWidth = 300;
   const legendHeight = 10;
 
   const legendScale = d3.scaleLog()
-    .domain([1, maxEmission])
+    .domain([1, adjustedMax])
     .range([0, legendWidth]);
 
   const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
@@ -77,7 +80,7 @@ Promise.all([
   const legend = svg.append("g")
     .attr("transform", `translate(20, ${height - 40})`);
 
-  const legendData = d3.range(1, maxEmission, (maxEmission - 1) / 9);
+  const legendData = d3.range(1, adjustedMax, (adjustedMax - 1) / 9);
 
   legend.selectAll("rect")
     .data(legendData)
