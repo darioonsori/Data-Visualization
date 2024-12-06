@@ -1,3 +1,4 @@
+(() => {
 // Set the dimensions and margins of the map
 const width = 960;
 const height = 600;
@@ -78,3 +79,4 @@ Promise.all([
     })
     .on("mouseout", () => tooltip.style("visibility", "hidden"));
 });
+})();
