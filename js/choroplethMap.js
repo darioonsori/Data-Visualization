@@ -10,8 +10,8 @@ const svg = d3.select("#map")
 
 // Carica i dati GeoJSON e CSV
 Promise.all([
-  d3.json("path/to/all.geojson"), // Cambia "path/to" con il percorso reale del file GeoJSON
-  d3.csv("path/to/co-emissions-per-capita.csv") // Cambia "path/to" con il percorso reale del file CSV
+  d3.json("data/all.geojson"), // Cambia "path/to" con il percorso reale del file GeoJSON
+  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // Cambia "path/to" con il percorso reale del file CSV
 ]).then(([geoData, csvData]) => {
   // Debug: log dei dati caricati
   console.log("GeoJSON Data:", geoData);
