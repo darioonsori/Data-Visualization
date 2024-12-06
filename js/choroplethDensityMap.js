@@ -1,5 +1,4 @@
 (() => {
-  // Set the dimensions of the map
   const width = 960;
   const height = 600;
 
@@ -11,29 +10,28 @@
 
   console.log("SVG created:", svg);
 
-  // Load GeoJSON and CSV data
   console.log("Loading GeoJSON and CSV data...");
   Promise.all([
-    d3.json("data/all.geojson"),
+    d3.json("data/all_with_area.geojson"), // Updated GeoJSON with AREA
     d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv")
   ]).then(([geoData, csvData]) => {
     console.log("GeoJSON Data:", geoData);
     console.log("CSV Data:", csvData);
 
-    // Check if AREA exists in GeoJSON
+    // Check if AREA is present in GeoJSON
     if (!geoData.features[0].properties.AREA) {
-      console.error("GeoJSON does not have an AREA property.");
-    } else {
-      console.log("Example GeoJSON Feature (with AREA):", geoData.features[0]);
+      console.error("GeoJSON does not have an AREA property. Please verify the file.");
+      return;
     }
 
     // Map density data to a dictionary
     const densityData = new Map();
     csvData.forEach(d => {
       if (d.Code && d.Code !== "-99" && !d.Code.startsWith("OWID")) {
-        const area = geoData.features.find(g => g.properties.ISO_A3 === d.Code)?.properties.AREA;
+        const feature = geoData.features.find(g => g.properties.ISO_A3 === d.Code);
+        const area = feature?.properties.AREA;
         if (area) {
-          const density = +d['Annual CO₂ emissions (per capita)'] / area;
+          const density = +d['Annual CO₂ emissions (per capita)'] / area; // Density = Emissions / Area
           densityData.set(d.Code, density);
         }
       }
@@ -54,7 +52,8 @@
 
     // Calculate the maximum value of density and adjust the range
     const maxDensity = d3.max(validCsvCodes.map(code => densityData.get(code)));
-    const adjustedMax = Math.ceil(maxDensity / 10) * 10; // Round up to the nearest multiple of 10
+    const adjustedMax = Math.ceil(maxDensity / 10) * 10;
+
     console.log("Max Density Value:", maxDensity);
     console.log("Adjusted Max Density:", adjustedMax);
 
