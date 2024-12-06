@@ -27,11 +27,13 @@ Promise.all([
   console.log("Codici mancanti nel CSV:", missingInCsv);
   console.log("Codici mancanti nel GeoJSON:", missingInGeo);
 
+  // Filtra i codici non validi
+  const validGeoCodes = geoCodes.filter(code => code !== '-99' && !code.startsWith('OWID'));
+
   // Calibra il massimo valore di emissione
   const maxEmission = d3.max(csvData, d => +d['Annual CO₂ emissions (per capita)']);
-  const colorScale = d3.scaleLog() // Usa una scala logaritmica
-    .domain([1, maxEmission])
-    .range(["#ffffff", "#800026"]);
+  const colorScale = d3.scaleSequentialLog(d3.interpolateReds)
+    .domain([1, maxEmission]);
 
   // Disegna i paesi
   svg.selectAll("path")
@@ -62,29 +64,31 @@ Promise.all([
     });
 
   // Aggiungi una legenda
+  const legendWidth = 300;
+  const legendHeight = 10;
+
   const legendScale = d3.scaleLog()
     .domain([1, maxEmission])
-    .range([0, 300]);
+    .range([0, legendWidth]);
+
+  const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
 
   const legend = svg.append("g")
     .attr("transform", `translate(20, ${height - 40})`);
 
+  const legendData = d3.range(1, maxEmission, (maxEmission - 1) / 9);
+
   legend.selectAll("rect")
-    .data(colorScale.range().map(color => {
-      const d = colorScale.invertExtent(color);
-      if (!d[0]) d[0] = 0;
-      if (!d[1]) d[1] = maxEmission;
-      return d;
-    }))
+    .data(legendData)
     .enter().append("rect")
-    .attr("x", d => legendScale(d[0]))
-    .attr("width", d => legendScale(d[1]) - legendScale(d[0]))
-    .attr("height", 10)
-    .style("fill", d => colorScale(d[0]));
+    .attr("x", d => legendScale(d))
+    .attr("width", legendWidth / legendData.length)
+    .attr("height", legendHeight)
+    .style("fill", d => colorScale(d));
 
   legend.append("g")
-    .attr("transform", "translate(0, 10)")
-    .call(d3.axisBottom(legendScale).ticks(5));
+    .attr("transform", `translate(0, ${legendHeight})`)
+    .call(legendAxis);
 }).catch(error => {
   console.error("Errore nel caricamento dei dati:", error);
 });
