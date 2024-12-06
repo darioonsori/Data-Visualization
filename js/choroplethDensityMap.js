@@ -1,7 +1,5 @@
-(() => {
-// Set the dimensions and margins of the map
-const width = 960;
-const height = 600;
+const choroplethWidth = 960;
+const choroplethHeight = 600;
 
 // Create SVG container
 const svg = d3.select("#density-map")
@@ -79,4 +77,4 @@ Promise.all([
     })
     .on("mouseout", () => tooltip.style("visibility", "hidden"));
 });
-})();
+
