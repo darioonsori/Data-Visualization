@@ -1,19 +1,19 @@
-// Imposta le dimensioni della mappa
+// Set the dimensions of the map
 const width = 960;
 const height = 600;
 
-// Crea l'elemento SVG
+// Create the SVG container for the map
 const svg = d3.select("#map")
   .append("svg")
   .attr("width", width)
   .attr("height", height);
 
-// Carica i dati GeoJSON e CSV
+// Load GeoJSON and CSV data
 Promise.all([
-  d3.json("data/all.geojson"),
-  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv")
+  d3.json("data/all.geojson"), // GeoJSON file for country boundaries
+  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // CSV file for CO₂ emissions data
 ]).then(([geoData, csvData]) => {
-  // Mappa delle emissioni
+  // Map emissions data to a dictionary
   const emissionData = new Map();
   csvData.forEach(d => {
     if (d.Code && d.Code !== "-99" && !d.Code.startsWith("OWID")) {
@@ -21,35 +21,30 @@ Promise.all([
     }
   });
 
-  // Filtra i codici validi
+  // Extract country codes from GeoJSON and CSV
   const geoCodes = geoData.features.map(d => d.properties.ISO_A3);
   const csvCodes = Array.from(emissionData.keys());
+
+  // Filter valid codes
   const validGeoCodes = geoCodes.filter(code => code !== '-99' && emissionData.has(code));
   const validCsvCodes = csvCodes.filter(code => geoCodes.includes(code));
 
-  // Debug: codici mancanti dopo il filtro
-  const missingInCsv = geoCodes.filter(code => !validCsvCodes.includes(code));
-  const missingInGeo = csvCodes.filter(code => !validGeoCodes.includes(code));
-
-  console.log("Codici mancanti nel CSV (dopo filtro):", missingInCsv);
-  console.log("Codici mancanti nel GeoJSON (dopo filtro):", missingInGeo);
-
-  // Calcola il massimo valore di emissione e lo aggiusta
+  // Calculate the maximum value of CO₂ emissions and adjust the range
   const maxEmission = d3.max(validCsvCodes.map(code => emissionData.get(code)));
-  const adjustedMax = Math.ceil(maxEmission / 10) * 10; // Arrotonda a multipli di 10
+  const adjustedMax = Math.ceil(maxEmission / 10) * 10; // Round up to the nearest multiple of 10
 
-  // Scala dei colori
+  // Define the color scale using a logarithmic scale
   const colorScale = d3.scaleSequentialLog(d3.interpolateReds)
     .domain([1, adjustedMax]);
 
-  // Disegna i paesi
+  // Draw the map using GeoJSON data
   svg.selectAll("path")
     .data(geoData.features.filter(d => validGeoCodes.includes(d.properties.ISO_A3)))
     .enter().append("path")
     .attr("d", d3.geoPath().projection(d3.geoMercator().fitSize([width, height], geoData)))
     .attr("fill", d => {
       const emission = emissionData.get(d.properties.ISO_A3);
-      return emission ? colorScale(emission) : "#ccc";
+      return emission ? colorScale(emission) : "#ccc"; // Grey for missing data
     })
     .attr("stroke", "#333")
     .on("mouseover", (event, d) => {
@@ -67,7 +62,7 @@ Promise.all([
       d3.select("#tooltip").style("visibility", "hidden");
     });
 
-  // Legenda
+  // Add a legend for the color scale
   const legendWidth = 300;
   const legendHeight = 10;
 
@@ -86,7 +81,7 @@ Promise.all([
     .data(legendData)
     .enter().append("rect")
     .attr("x", d => legendScale(d))
-    .attr("width", 300 / legendData.length)
+    .attr("width", legendWidth / legendData.length)
     .attr("height", legendHeight)
     .style("fill", d => colorScale(d));
 
@@ -94,5 +89,5 @@ Promise.all([
     .attr("transform", `translate(0, ${legendHeight})`)
     .call(legendAxis);
 }).catch(error => {
-  console.error("Errore nel caricamento dei dati:", error);
+  console.error("Error loading the data:", error);
 });
