@@ -9,6 +9,7 @@ const svgDensityMap = d3
   .attr("width", mapWidth)
   .attr("height", mapHeight);
 
+
 // Load GeoJSON and CSV data
 Promise.all([
   d3.json("data/all.geojson"), // GeoJSON file for country boundaries
@@ -38,12 +39,15 @@ Promise.all([
   // Debug: Log the emission map to ensure correctness
   console.log("Emissions map:", emissionMap);
 
-  // Parse area data to extract country code and area for the given year
+  // Guess column names for area data based on raw data inspection
+  const areaCodeColumn = "Country Code"; // Replace with the correct column name if different
+  const areaValueColumn = "2018"; // Replace with the correct column name if different
+
   const areaData = rawAreaData
-    .filter((d) => d["Country Code"] && !isNaN(d[year])) // Adjust column names based on actual CSV structure
+    .filter((d) => d[areaCodeColumn] && !isNaN(d[areaValueColumn])) // Adjust column names based on actual CSV structure
     .map((d) => ({
-      countryCode: d["Country Code"],
-      area: +d[year]
+      countryCode: d[areaCodeColumn],
+      area: +d[areaValueColumn]
     }));
 
   // Debug: Log parsed area data
