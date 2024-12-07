@@ -38,7 +38,7 @@
       const adjustedMax = Math.ceil(maxEmission / 10) * 10; // Round up to the nearest multiple of 10
 
       // Define the color scale using a linear scale
-      const colorScale = d3.scaleSequential(d3.interpolateReds)
+      const colorScale = d3.scaleSequential(d3.interpolateYlOrRd)
         .domain([0, adjustedMax]);
 
       // Draw the map using GeoJSON data
@@ -55,7 +55,7 @@
           const emission = emissionData.get(d.properties.ISO_A3);
           d3.select("#tooltip")
             .style("visibility", "visible")
-            .text(`${d.properties.NAME}: ${emission ? emission.toLocaleString() : "Data not available"} tons`);
+            .text(`${d.properties.NAME}: ${emission ? emission.toLocaleString() : "Data not available"} tons of CO₂ emitted in 2018`);
         })
         .on("mousemove", event => {
           d3.select("#tooltip")
