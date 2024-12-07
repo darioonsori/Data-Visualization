@@ -2,182 +2,183 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Environmental Data Visualizations</title>
-  <link rel="icon" href="data:,">
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Environmental Data Visualizations</title>
+    <link rel="icon" href="data:,">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
 
-  <style>
-    #chart {
-      width: 100%;
-      height: 500px;
-      /* Imposta un'altezza visibile */
-      position: relative;
-    }
+    <style>
+        #chart {
+            width: 100%;
+            height: 500px;
+            position: relative;
+        }
 
-    .tooltip {
-      position: absolute;
-      background-color: white;
-      border: 1px solid black;
-      border-radius: 5px;
-      padding: 5px;
-      visibility: hidden;
-    }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
+            border-radius: 5px;
+            padding: 5px;
+            visibility: hidden;
+        }
 
-    .node {
-      fill: steelblue;
-      stroke: black;
-      cursor: pointer;
-    }
+        .node {
+            fill: steelblue;
+            stroke: black;
+            cursor: pointer;
+        }
 
-    .link {
-      fill: none;
-      stroke-opacity: 0.2;
-    }
+        .link {
+            fill: none;
+            stroke-opacity: 0.2;
+        }
 
-    .link:hover {
-      stroke-opacity: 0.5;
-    }
+        .link:hover {
+            stroke-opacity: 0.5;
+        }
 
-     #map {
-    width: 100%;
-    height: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0;
-    }
+        #map {
+            width: 100%;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
 
-     #density-map {
-    width: 100%;
-    height: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0;
-    }
-    
-  </style>
+        #density-map {
+            width: 100%;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 
 <body>
-  <h1>Global Environmental Data Visualizations</h1>
-  <h2>Assignment 1 - Dario Onsori</h2>
+    <h1>Global Environmental Data Visualizations</h1>
+    <h2>Assignment 1 - Dario Onsori</h2>
 
-  <!-- Data at a Glance Section -->
-  <section id="data-at-glance">
-    <h3>Data at a Glance</h3>
-    <p>This section presents a quick comparison of CO₂ emissions for the year 2018 and the average decade 2010-2020.</p>
+    <!-- Data at a Glance Section -->
+    <section id="data-at-glance">
+        <h3>Data at a Glance</h3>
+        <p>This section presents a quick comparison of CO₂ emissions for the year 2018 and the average decade 2010-2020.
+        </p>
 
-    <!-- Selector for choosing between year and decade -->
-    <label for="time-period">Select Time Period:</label>
-    <select id="time-period">
-      <option value="2018">Year: 2018</option>
-      <option value="decade">Decade: 2010-2020 (Average)</option>
-    </select>
+        <!-- Selector for choosing between year and decade -->
+        <label for="time-period">Select Time Period:</label>
+        <select id="time-period">
+            <option value="2018">Year: 2018</option>
+            <option value="decade">Decade: 2010-2020 (Average)</option>
+        </select>
 
-    <!-- Container for the bar chart -->
-    <div id="bar-chart"></div>
+        <!-- Container for the bar chart -->
+        <div id="bar-chart"></div>
 
-    <!-- Button to toggle sorting -->
-    <div style="margin-top: 10px;">
-      <button onclick="sortBars()">Sort by Emissions</button>
+        <!-- Button to toggle sorting -->
+        <div style="margin-top: 10px;">
+            <button onclick="sortBars()">Sort by Emissions</button>
+        </div>
+    </section>
+
+    <!-- Country Comparison Section -->
+    <section id="country-comparison">
+        <h3>Country Comparison</h3>
+        <p>This section compares CO₂ emissions per capita for the year 2018 across different regions, highlighting the
+            top 5
+            countries and an aggregated "Other" category for each region.</p>
+
+        <div id="stacked-bar-chart"></div>
+    </section>
+
+    <!-- Country Comparison - Small Multiple Section -->
+    <section id="country-comparison-multiple">
+        <h3>Country Comparison - Small Multiple</h3>
+        <p>This section displays the CO₂ emissions per capita for the year 2018 for each region using a "small multiple"
+            stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other"
+            category.
+        </p>
+
+        <!-- Container for the small multiple stacked bar charts -->
+        <div id="small-multiples"></div>
+
+        <div class="tooltip" id="tooltip"></div>
+    </section>
+
+    <!-- Country Comparison - Stacked Bar Chart 100% Section -->
+    <section id="country-comparison-100">
+        <h3>Country Comparison - Stacked Bar Chart 100%</h3>
+        <p>This section shows the CO₂ emissions per capita for each region as a 100% stacked bar chart, displaying the
+            relative proportions of emissions from the top-5 countries and the "Other" category.</p>
+
+        <!-- Container for the 100% stacked bar chart -->
+        <div id="stacked-bar-100-chart"></div>
+    </section>
+
+    <!-- Country Comparison - CO₂ Emissions by Type (Heatmap) -->
+    <section id="country-comparison-heatmap">
+        <h3>Country Comparison - CO₂ Emissions by Type (Heatmap)</h3>
+        <p>This heatmap shows the CO₂ emissions from fossil fuels and land-use for the top-10 emitting countries in the
+            selected year or decade.</p>
+
+        <!-- Selector for choosing between year and decade -->
+        <label for="heatmap-time-period">Select Time Period:</label>
+        <select id="heatmap-time-period">
+            <option value="2018">Year: 2018</option>
+            <option value="decade">Decade: 2010-2020 (Average)</option>
+        </select>
+
+        <!-- Container for the heatmap chart -->
+        <div id="heatmap-chart"></div>
+
+        <!-- Tooltip for displaying emissions information on hover -->
+        <div class="tooltip" id="tooltip"
+            style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 3px;">
+        </div>
+    </section>
+
+    <!-- Distributions Section -->
+    <section id="distributions">
+        <h3>Distributions - Alluvial Plot</h3>
+        <p>This section visualizes the distribution of CO₂ emissions by continent, country, and emission type (Fossil vs
+            Land-Use) using an alluvial plot.</p>
+        <div id="chart"></div>
+    </section>
+    <!-- Tooltip for displaying link information -->
+    <div id="tooltip"
+        style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 5px; font-size: 12px; pointer-events: none;">
     </div>
-  </section>
 
-  <!-- Country Comparison Section -->
-  <section id="country-comparison">
-    <h3>Country Comparison</h3>
-    <p>This section compares CO₂ emissions per capita for the year 2018 across different regions, highlighting the top 5
-      countries and an aggregated "Other" category for each region.</p>
+    <!-- Choropleth Map 1 -->
+    <section id="choropleth-map">
+        <h3>Choropleth Map of CO₂ Emissions per Capita</h3>
+        <p>This map displays CO₂ emissions per capita for the year 2018.</p>
+        <div id="map"></div>
+    </section>
 
-    <div id="stacked-bar-chart"></div>
-  </section>
-
-  <!-- Country Comparison - Small Multiple Section -->
-  <section id="country-comparison-multiple">
-    <h3>Country Comparison - Small Multiple</h3>
-    <p>This section displays the CO₂ emissions per capita for the year 2018 for each region using a "small multiple"
-      stacked bar chart. Each region has its own chart showing the top-5 countries and the aggregated "Other" category.
-    </p>
-
-    <!-- Container for the small multiple stacked bar charts -->
-    <div id="small-multiples"></div>
-
-    <div class="tooltip" id="tooltip"></div>
-  </section>
-
-  <!-- Country Comparison - Stacked Bar Chart 100% Section -->
-  <section id="country-comparison-100">
-    <h3>Country Comparison - Stacked Bar Chart 100%</h3>
-    <p>This section shows the CO₂ emissions per capita for each region as a 100% stacked bar chart, displaying the
-      relative proportions of emissions from the top-5 countries and the "Other" category.</p>
-
-    <!-- Container for the 100% stacked bar chart -->
-    <div id="stacked-bar-100-chart"></div>
-  </section>
-
-  <!-- Country Comparison - CO₂ Emissions by Type (Heatmap) -->
-  <section id="country-comparison-heatmap">
-    <h3>Country Comparison - CO₂ Emissions by Type (Heatmap)</h3>
-    <p>This heatmap shows the CO₂ emissions from fossil fuels and land-use for the top-10 emitting countries in the
-      selected year or decade.</p>
-
-    <!-- Selector for choosing between year and decade -->
-    <label for="heatmap-time-period">Select Time Period:</label>
-    <select id="heatmap-time-period">
-      <option value="2018">Year: 2018</option>
-      <option value="decade">Decade: 2010-2020 (Average)</option>
-    </select>
-
-    <!-- Container for the heatmap chart -->
-    <div id="heatmap-chart"></div>
-
-    <!-- Tooltip for displaying emissions information on hover -->
-    <div class="tooltip" id="tooltip"
-      style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 3px;">
-    </div>
-  </section>
-
-  <!-- Distributions Section -->
-  <section id="distributions">
-    <h3>Distributions - Alluvial Plot</h3>
-    <p>This section visualizes the distribution of CO₂ emissions by continent, country, and emission type (Fossil vs
-      Land-Use) using an alluvial plot.</p>
-    <div id="chart"></div>
-  </section>
-  <!-- Tooltip for displaying link information -->
-  <div id="tooltip"
-    style="position: absolute; visibility: hidden; background-color: white; border: 1px solid black; padding: 5px; border-radius: 5px; font-size: 12px; pointer-events: none;">
-  </div>
-  
-  <!-- Choropleth Map 1 -->
-  <section id="choropleth-map">
-  <h3>Choropleth Map of CO₂ Emissions per Capita</h3>
-  <p>This map displays CO₂ emissions per capita for the year 2018.</p>
-  <div id="map"></div>
-  </section>
-
-  <!-- Choropleth Map 2 -->
-  <section id="choropleth-map-2">
-    <h3>Choropleth Map of CO₂ Emissions Densities</h3>
-    <p>This map displays CO₂ emissions densities (total emissions per unit area).</p>
-    <div id="density-map"></div>
-  </section>
+    <!-- Choropleth Map 2 -->
+    <section id="choropleth-map-2">
+        <h3>Choropleth Map of CO₂ Emissions Densities</h3>
+        <p>This map displays CO₂ emissions densities (total emissions per unit area).</p>
+        <div id="density-map"></div>
+    </section>
 
 
 
-  <!-- Link to JavaScript files -->
-  <script src="js/barChart.js"></script>
-  <script src="js/stackedBarChart.js"></script>
-  <script src="js/smallMultiples.js"></script>
-  <script src="js/stackedBarChart100.js"></script>
-  <script src="js/heatmap.js"></script>
-  <script src="js/alluvialPlot.js"></script>
-  <script src="js/choroplethMap.js"></script>
-  <script src="js/choroplethDensityMap.js"></script>
+    <!-- Link to JavaScript files -->
+    <script src="js/barChart.js"></script>
+    <script src="js/stackedBarChart.js"></script>
+    <script src="js/smallMultiples.js"></script>
+    <script src="js/stackedBarChart100.js"></script>
+    <script src="js/heatmap.js"></script>
+    <script src="js/alluvialPlot.js"></script>
+    <script src="js/choroplethMap.js"></script>
+    <script src="js/choroplethDensityMap.js"></script>
 </body>
 
 </html>
