@@ -1,81 +1,97 @@
-// Set the dimensions for the CO₂ per capita map
-const mapWidth = 960;
-const mapHeight = 600;
+// Set the dimensions of the map
+    const width = 960;
+    const height = 600;
 
-// Create the SVG container for the map
-const svgMap = d3
-  .select("#map")
-  .append("svg")
-  .attr("width", mapWidth)
-  .attr("height", mapHeight);
+    // Create the SVG container for the map
+    const svg = d3.select("#map")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
 
-// Load GeoJSON and emissions data
-Promise.all([
-  d3.json("data/all.geojson"), // GeoJSON file
-  d3.csv("data/annual-co2-emissions-per-country.csv") // CSV file for emissions
-]).then(([geoData, csvData]) => {
-  const year = 2018;
-  const emissionsMap = new Map(
-    csvData
-      .filter(d => +d.Year === year && d.Code && !isNaN(+d["Annual CO₂ emissions"]))
-      .map(d => [d.Code, +d["Annual CO₂ emissions"]])
-  );
+    // Load GeoJSON and CSV data
+    Promise.all([
+      d3.json("data/all.geojson"), // GeoJSON file for country boundaries
+      d3.csv("data/annual-co2-emissions-per-country.csv") // CSV file for total CO₂ emissions
+    ]).then(([geoData, csvData]) => {
+      // Filter the dataset for the desired year (e.g., 2018)
+      const year = 2018;
+      const filteredData = csvData.filter(d => +d.Year === year);
 
-  const validFeatures = geoData.features.filter(d =>
-    emissionsMap.has(d.properties.ISO_A3) && d.properties.NAME !== "Antarctica"
-  );
+      // Map emissions data to a dictionary
+      const emissionData = new Map();
+      filteredData.forEach(d => {
+        if (d.Code && d.Code !== "-99" && !d.Code.startsWith("OWID")) {
+          emissionData.set(d.Code, +d['Annual CO₂ emissions']);
+        }
+      });
 
-  const maxEmission = d3.max(Array.from(emissionsMap.values()));
-  const colorScale = d3.scaleSequential(d3.interpolateYlGnBu).domain([0, maxEmission]);
+      // Extract country codes from GeoJSON and CSV
+      const geoCodes = geoData.features.map(d => d.properties.ISO_A3);
+      const csvCodes = Array.from(emissionData.keys());
 
-  const projection = d3
-    .geoMercator()
-    .fitSize([mapWidth, mapHeight], { type: "FeatureCollection", features: validFeatures });
-  const path = d3.geoPath().projection(projection);
+      // Filter valid codes
+      const validGeoCodes = geoCodes.filter(code => code !== '-99' && emissionData.has(code));
+      const validCsvCodes = csvCodes.filter(code => geoCodes.includes(code));
 
-  svgMap
-    .selectAll("path")
-    .data(validFeatures)
-    .enter()
-    .append("path")
-    .attr("d", path)
-    .attr("fill", d => {
-      const emission = emissionsMap.get(d.properties.ISO_A3);
-      return emission ? colorScale(emission) : "#ccc";
-    })
-    .attr("stroke", "#333")
-    .on("mouseover", (event, d) => {
-      const emission = emissionsMap.get(d.properties.ISO_A3);
-      d3.select("#tooltip")
-        .style("visibility", "visible")
-        .text(`${d.properties.NAME}: ${emission ? emission.toLocaleString() : "No data"} tons of CO₂`);
-    })
-    .on("mousemove", event => {
-      d3.select("#tooltip")
-        .style("top", `${event.pageY + 5}px`)
-        .style("left", `${event.pageX + 5}px`);
-    })
-    .on("mouseout", () => {
-      d3.select("#tooltip").style("visibility", "hidden");
+      // Calculate the maximum value of CO₂ emissions
+      const maxEmission = d3.max(validCsvCodes.map(code => emissionData.get(code)));
+      const adjustedMax = Math.ceil(maxEmission / 10) * 10; // Round up to the nearest multiple of 10
+
+      // Define the color scale using a linear scale
+      const colorScale = d3.scaleSequential(d3.interpolateReds)
+        .domain([0, adjustedMax]);
+
+      // Draw the map using GeoJSON data
+      svg.selectAll("path")
+        .data(geoData.features.filter(d => validGeoCodes.includes(d.properties.ISO_A3) && d.properties.NAME !== "Antarctica"))
+        .enter().append("path")
+        .attr("d", d3.geoPath().projection(d3.geoMercator().fitSize([width, height], geoData)))
+        .attr("fill", d => {
+          const emission = emissionData.get(d.properties.ISO_A3);
+          return emission ? colorScale(emission) : "#ccc"; // Grey for missing data
+        })
+        .attr("stroke", "#333")
+        .on("mouseover", (event, d) => {
+          const emission = emissionData.get(d.properties.ISO_A3);
+          d3.select("#tooltip")
+            .style("visibility", "visible")
+            .text(`${d.properties.NAME}: ${emission ? emission.toLocaleString() : "Data not available"} tons`);
+        })
+        .on("mousemove", event => {
+          d3.select("#tooltip")
+            .style("top", `${event.pageY + 5}px`)
+            .style("left", `${event.pageX + 5}px`);
+        })
+        .on("mouseout", () => {
+          d3.select("#tooltip").style("visibility", "hidden");
+        });
+
+      // Add a legend for the color scale
+      const legendWidth = 300;
+      const legendHeight = 10;
+
+      const legendScale = d3.scaleLinear()
+        .domain([0, adjustedMax])
+        .range([0, legendWidth]);
+
+      const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
+
+      const legend = svg.append("g")
+        .attr("transform", `translate(20, ${height - 40})`);
+
+      const legendData = d3.range(0, adjustedMax, adjustedMax / 9);
+
+      legend.selectAll("rect")
+        .data(legendData)
+        .enter().append("rect")
+        .attr("x", d => legendScale(d))
+        .attr("width", legendWidth / legendData.length)
+        .attr("height", legendHeight)
+        .style("fill", d => colorScale(d));
+
+      legend.append("g")
+        .attr("transform", `translate(0, ${legendHeight})`)
+        .call(legendAxis);
+    }).catch(error => {
+      console.error("Error loading the data:", error);
     });
-
-  // Legend
-  const legendWidth = 300;
-  const legendHeight = 10;
-  const legendScale = d3.scaleLinear().domain([0, maxEmission]).range([0, legendWidth]);
-  const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
-  const legend = svgMap.append("g").attr("transform", `translate(20, ${mapHeight - 40})`);
-  const legendData = d3.range(0, maxEmission, maxEmission / 9);
-
-  legend
-    .selectAll("rect")
-    .data(legendData)
-    .enter()
-    .append("rect")
-    .attr("x", d => legendScale(d))
-    .attr("width", legendWidth / legendData.length)
-    .attr("height", legendHeight)
-    .style("fill", d => colorScale(d));
-
-  legend.append("g").attr("transform", `translate(0, ${legendHeight})`).call(legendAxis);
-}).catch(error => console.error("Error loading data:", error));
