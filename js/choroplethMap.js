@@ -35,11 +35,11 @@ Promise.all([
 
     // Calculate the maximum value of CO₂ emissions
     const maxEmission = d3.max(validCsvCodes.map(code => emissionData.get(code)));
-    const adjustedMax = Math.ceil(maxEmission / 10) * 10; // Round up to the nearest multiple of 10
 
-    // Define the color scale using a linear scale
-    const colorScale = d3.scaleSequential(d3.interpolateReds)
-        .domain([0, adjustedMax]);
+    // Define the color scale using a logarithmic scale
+    const colorScale = d3.scaleLog()
+        .domain([1, maxEmission]) // Start at 1 to avoid log(0)
+        .range(["#f7fbff", "#08306b"]); // Using a blue scale for better distinction
 
     // Draw the map using GeoJSON data
     svg.selectAll("path")
@@ -70,16 +70,18 @@ Promise.all([
     const legendWidth = 300;
     const legendHeight = 10;
 
-    const legendScale = d3.scaleLinear()
-        .domain([0, adjustedMax])
+    const legendScale = d3.scaleLog()
+        .domain([1, maxEmission])
         .range([0, legendWidth]);
 
-    const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
+    const legendAxis = d3.axisBottom(legendScale)
+        .ticks(5, ".0s") // Log scale with SI units
+        .tickFormat(d3.format(",.0f"));
 
     const legend = svg.append("g")
         .attr("transform", `translate(20, ${height - 40})`);
 
-    const legendData = d3.range(0, adjustedMax, adjustedMax / 9);
+    const legendData = d3.range(1, maxEmission, maxEmission / 9);
 
     legend.selectAll("rect")
         .data(legendData)
