@@ -1,6 +1,6 @@
-// Set the dimensions of the map
-const densityWidth = 960; // Width of the SVG container
-const densityHeight = 600; // Height of the SVG container
+// Set dimensions of the map
+const densityWidth = 960;
+const densityHeight = 600;
 
 // Create the SVG container for the density map
 const svgDensityMap = d3.select("#density-map")
@@ -12,12 +12,17 @@ const svgDensityMap = d3.select("#density-map")
 Promise.all([
   d3.json("data/all.geojson"), // GeoJSON file for country boundaries
   d3.csv("data/annual-co2-emissions-per-country.csv"), // Emissions data
-  d3.csv("data/land.csv", d => ({
-    countryCode: d['Country Code'],
-    area: +d['2018'] // Extract area for the year 2018
-  }))
+  d3.csv("data/land.csv", d => {
+    // Filter out invalid rows and parse the area for the year 2018
+    if (d['Country Code'] && !isNaN(d['2018'])) {
+      return {
+        countryCode: d['Country Code'],
+        area: +d['2018'] // Parse area as a number
+      };
+    }
+  })
 ]).then(([geoData, emissionsData, areaData]) => {
-  // Debug logs for data loading
+  // Debug logs
   console.log("GeoJSON data:", geoData);
   console.log("Emissions data:", emissionsData);
   console.log("Area data:", areaData);
@@ -35,12 +40,12 @@ Promise.all([
 
   const areaMap = new Map();
   areaData.forEach(d => {
-    if (d.countryCode && d.area) {
+    if (d && d.countryCode && d.area) {
       areaMap.set(d.countryCode, d.area);
     }
   });
 
-  // Debug logs for mapped data
+  // Debug logs
   console.log("Emissions map:", emissionsMap);
   console.log("Area map:", areaMap);
 
@@ -60,7 +65,7 @@ Promise.all([
   const maxDensity = d3.max(Array.from(densityData.values()));
 
   // Define the color scale for density
-  const densityColorScale = d3.scaleSequential(d3.interpolateViridis) // Use Viridis for better visibility
+  const densityColorScale = d3.scaleSequential(d3.interpolateViridis)
     .domain([0, maxDensity]);
 
   // Draw the map using GeoJSON data
@@ -96,8 +101,8 @@ Promise.all([
     });
 
   // Add a legend for the color scale
-  const densityLegendWidth = 300; // Width of the legend
-  const densityLegendHeight = 10; // Height of the legend
+  const densityLegendWidth = 300;
+  const densityLegendHeight = 10;
 
   const densityLegendScale = d3.scaleLinear()
     .domain([0, maxDensity])
