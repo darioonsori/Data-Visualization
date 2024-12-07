@@ -11,13 +11,17 @@ const svg = d3.select("#map")
 // Load GeoJSON and CSV data
 Promise.all([
   d3.json("data/all.geojson"), // GeoJSON file for country boundaries
-  d3.csv("data/co-emissions-per-capita/co-emissions-per-capita.csv") // CSV file for CO₂ emissions data
+  d3.csv("data/annual-co2-emissions-per-country.csv") // CSV file for total CO₂ emissions
 ]).then(([geoData, csvData]) => {
+  // Filter the dataset for the desired year (e.g., 2018)
+  const year = 2018;
+  const filteredData = csvData.filter(d => +d.Year === year);
+
   // Map emissions data to a dictionary
   const emissionData = new Map();
-  csvData.forEach(d => {
+  filteredData.forEach(d => {
     if (d.Code && d.Code !== "-99" && !d.Code.startsWith("OWID")) {
-      emissionData.set(d.Code, +d['Annual CO₂ emissions (per capita)']);
+      emissionData.set(d.Code, +d['Annual CO₂ emissions']);
     }
   });
 
@@ -51,7 +55,7 @@ Promise.all([
       const emission = emissionData.get(d.properties.ISO_A3);
       d3.select("#tooltip")
         .style("visibility", "visible")
-        .text(`${d.properties.NAME}: ${emission ? emission.toFixed(2) : "Data not available"} tons per capita`);
+        .text(`${d.properties.NAME}: ${emission ? emission.toLocaleString() : "Data not available"} tons`);
     })
     .on("mousemove", event => {
       d3.select("#tooltip")
