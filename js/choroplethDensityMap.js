@@ -1,12 +1,13 @@
 // Set the dimensions of the map
-const width = 960;
-const height = 600;
+const mapWidth = 960;
+const mapHeight = 600;
 
 // Create the SVG container for the map
-const svg = d3.select("#map")
+const svgDensityMap = d3
+  .select("#mapDensity")
   .append("svg")
-  .attr("width", width)
-  .attr("height", height);
+  .attr("width", mapWidth)
+  .attr("height", mapHeight);
 
 // Load GeoJSON and CSV data
 Promise.all([
