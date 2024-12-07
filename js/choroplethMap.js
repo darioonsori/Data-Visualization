@@ -54,9 +54,8 @@
         .on("mouseover", (event, d) => {
           const emission = emissionData.get(d.properties.ISO_A3);
           d3.select("#tooltip")
-            .style("visibility", "visible")
-            .text(`${d.properties.NAME}: ${emission ? emission.toLocaleString() : "Data not available"} tons`);
-        })
+          .style("visibility", "visible")
+          .text(`${d.properties.NAME}: ${emission ? emission.toLocaleString() : "Data not available"} tons of CO₂ emitted in 2018`);
         .on("mousemove", event => {
           d3.select("#tooltip")
             .style("top", `${event.pageY + 5}px`)
