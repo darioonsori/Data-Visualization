@@ -4,7 +4,7 @@ const mapHeight = 600;
 
 // Create the SVG container for the map
 const svgDensityMap = d3
-  .select("#mapDensity")
+  .select("#density-map")
   .append("svg")
   .attr("width", mapWidth)
   .attr("height", mapHeight);
@@ -24,17 +24,15 @@ Promise.all([
     const emissionsMap = new Map(emissionsFiltered.map(d => [d.Code, +d['Annual CO₂ emissions']]));
     console.log("Emissions map:", emissionsMap);
 
-    // Filter the land area dataset for the year 2018
-    const landAreaYear = 2018;
-    const landAreaFiltered = landAreaData.filter(d => +d.Year === landAreaYear);
-    const landAreaMap = new Map(landAreaFiltered.map(d => [d.Code, +d['Land area (sq. km)']]));
+    // Create the land area map
+    const landAreaMap = new Map(landAreaData.map(d => [d.Code, +d['Land area (sq. km)']]));
     console.log("Area map:", landAreaMap);
 
     // Calculate emissions density (emissions per square km)
     const densityData = new Map();
     emissionsMap.forEach((emission, code) => {
         const area = landAreaMap.get(code);
-        if (area) {
+        if (area && area > 0) { // Ensure area is a valid number and greater than 0
             densityData.set(code, emission / area);
         }
     });
@@ -48,13 +46,13 @@ Promise.all([
 
     // Define the color scale
     const maxDensity = d3.max(Array.from(densityData.values()));
-    const colorScale = d3.scaleSequential(d3.interpolateYlGnBu).domain([0, maxDensity]);
+    const colorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, maxDensity]);
 
     // Draw the map using GeoJSON data
-    svg.selectAll("path")
+    svgDensityMap.selectAll("path")
         .data(validFeatures)
         .enter().append("path")
-        .attr("d", d3.geoPath().projection(d3.geoMercator().fitSize([width, height], geoData)))
+        .attr("d", d3.geoPath().projection(d3.geoMercator().fitSize([mapWidth, mapHeight], geoData)))
         .attr("fill", d => {
             const density = densityData.get(d.properties.ISO_A3);
             return density ? colorScale(density) : "#ccc"; // Grey for missing data
@@ -85,8 +83,8 @@ Promise.all([
 
     const legendAxis = d3.axisBottom(legendScale).ticks(5, ".0f");
 
-    const legend = svg.append("g")
-        .attr("transform", `translate(20, ${height - 40})`);
+    const legend = svgDensityMap.append("g")
+        .attr("transform", `translate(20, ${mapHeight - 40})`);
 
     const legendData = d3.range(0, maxDensity, maxDensity / 9);
 
