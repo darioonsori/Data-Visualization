@@ -40,22 +40,14 @@
             stroke-opacity: 0.5;
         }
 
-        #map {
-            width: 100%;
-            height: auto;
+        #map, #density-map {
+            width: 100%; /* Adatta alle dimensioni del contenitore */
+            max-width: 960px; /* Dimensione massima corrispondente */
+            height: auto; /* Mantieni le proporzioni */
+            margin: 0 auto; /* Centra nella pagina */
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 20px 0;
-        }
-
-        #density-map {
-            width: 100%;
-            height: auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
         }
     </style>
 </head>
